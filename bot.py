@@ -42,7 +42,7 @@ async def cmd_start(message: types.Message):
     await message.answer(
         "✨ <b>Привет!</b>\n\n"
         "Тебя ждёт особенный подарок от <b>Клуба Подпольных Авантюристов</b>.\n\n"
-        "Нажми кнопку внизу, чтобы открыть свой сертификат 👇",
+        "Нажми кнопку внизу, чтобы узнать!) 👇",
         reply_markup=kb,
         parse_mode="HTML",
     )
@@ -78,14 +78,15 @@ async def on_web_app_data(message: types.Message):
 
 
 def build_dates_keyboard() -> InlineKeyboardMarkup:
-    buttons = []
-    today = datetime.now()
-    for i in range(1, 4):
-        d = today + timedelta(days=i)
-        label = d.strftime("%a, %d %b").capitalize()
-        buttons.append(
-            [InlineKeyboardButton(text=label, callback_data=f"date:{d.strftime('%Y-%m-%d')}")]
-        )
+    dates = [
+        ("25 февраля", "2026-02-25"),
+        ("7 марта", "2026-03-07"),
+        ("26 марта", "2026-03-26"),
+    ]
+    buttons = [
+        [InlineKeyboardButton(text=f"📅 {label}", callback_data=f"date:{value}")]
+        for label, value in dates
+    ]
     buttons.append(
         [InlineKeyboardButton(text="📅 Другая дата", callback_data="date:custom")]
     )
@@ -113,8 +114,8 @@ async def on_date_selected(callback: types.CallbackQuery):
     # Confirm to the recipient
     await callback.message.edit_text(
         f"✅ <b>Отлично!</b>\n\n"
-        f"Ты записана на <b>{pretty}</b>.\n"
-        f"Жди — скоро всё подтвердим! 💆‍♀️",
+        f"Ты записана на <b>{pretty}</b>.\n\n"
+        f"Они сошлись. Волна и камень. Стихи и проза, лед и пламень.",
         parse_mode="HTML",
     )
 
