@@ -76,7 +76,7 @@ async def on_web_app_data(message: types.Message):
 def build_dates_keyboard() -> InlineKeyboardMarkup:
     buttons = []
     today = datetime.now()
-    for i in range(1, 8):
+    for i in range(1, 4):
         d = today + timedelta(days=i)
         label = d.strftime("%a, %d %b").capitalize()
         buttons.append(
