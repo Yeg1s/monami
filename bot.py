@@ -86,6 +86,7 @@ async def on_web_app_data(message: types.Message):
 def build_dates_keyboard() -> InlineKeyboardMarkup:
     dates = [
         ("25 февраля", "2026-02-25"),
+        ("28 февраля (суббота)", "2026-02-28"),
         ("7 марта", "2026-03-07"),
         ("26 марта", "2026-03-26"),
     ]
