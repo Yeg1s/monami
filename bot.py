@@ -8,7 +8,9 @@ from aiogram.filters import CommandStart
 from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    MenuButtonWebApp,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
     WebAppInfo,
 )
 from dotenv import load_dotenv
@@ -25,20 +27,22 @@ dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[
+    kb = ReplyKeyboardMarkup(
+        keyboard=[
             [
-                InlineKeyboardButton(
+                KeyboardButton(
                     text="🎁 Открыть сертификат",
                     web_app=WebAppInfo(url=WEBAPP_URL),
                 )
             ]
-        ]
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
     )
     await message.answer(
         "✨ <b>Привет!</b>\n\n"
         "Тебя ждёт особенный подарок от <b>Клуба Подпольных Авантюристов</b>.\n\n"
-        "Нажми кнопку, чтобы открыть свой сертификат 👇",
+        "Нажми кнопку внизу, чтобы открыть свой сертификат 👇",
         reply_markup=kb,
         parse_mode="HTML",
     )
