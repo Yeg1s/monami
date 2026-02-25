@@ -107,6 +107,7 @@ async def on_date_selected(callback: types.CallbackQuery):
         write_mode.add(callback.from_user.id)
         await callback.message.answer(
             "✍️ <b>Напиши что угодно</b> — Лют получит твоё сообщение!\n\n"
+            "(секретная связь)\n\n"
             "<i>Кнопки с датами всё ещё доступны выше ☝️</i>",
             parse_mode="HTML",
         )
