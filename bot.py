@@ -24,6 +24,12 @@ WEBAPP_URL = os.getenv("WEBAPP_URL")
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
+# Store user chat IDs for admin reply forwarding
+# key: admin message_id -> value: user chat_id
+reply_map: dict[int, int] = {}
+# Track users in "write to Lut" mode
+write_mode: set[int] = set()
+
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
@@ -41,7 +47,7 @@ async def cmd_start(message: types.Message):
     )
     await message.answer(
         "✨ <b>Привет!</b>\n\n"
-        "Тебя ждёт особенный подарок от <b>Клуба Подпольных Авантюристов</b>.\n\n"
+        "Тебас ждёт особенный подарок от <b>Клуба Подпольных Авантюристов</b>.\n\n"
         "Нажми кнопку внизу, чтобы узнать!) 👇",
         reply_markup=kb,
         parse_mode="HTML",
@@ -88,7 +94,7 @@ def build_dates_keyboard() -> InlineKeyboardMarkup:
         for label, value in dates
     ]
     buttons.append(
-        [InlineKeyboardButton(text="📅 Другая дата", callback_data="date:custom")]
+        [InlineKeyboardButton(text="✍️ Написать Люту (он ждёт)", callback_data="date:custom")]
     )
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -98,8 +104,9 @@ async def on_date_selected(callback: types.CallbackQuery):
     raw = callback.data.split(":", 1)[1]
 
     if raw == "custom":
-        await callback.message.answer(
-            "📅 Напиши мне удобную дату, и я передам её организатору!",
+        write_mode.add(callback.from_user.id)
+        await callback.message.edit_text(
+            "✍️ <b>Напиши что угодно</b> — Лют получит твоё сообщение!",
             parse_mode="HTML",
         )
         await callback.answer()
@@ -123,13 +130,56 @@ async def on_date_selected(callback: types.CallbackQuery):
     if ADMIN_ID:
         user = callback.from_user
         name = user.full_name or user.username or "Неизвестный"
-        await bot.send_message(
+        sent = await bot.send_message(
             ADMIN_ID,
             f"📋 <b>{name}</b> выбрала дату массажа: <b>{pretty}</b>",
             parse_mode="HTML",
         )
+        reply_map[sent.message_id] = callback.from_user.id
 
     await callback.answer("Записано!")
+
+
+# Admin replies to forwarded messages -> send back to user
+@dp.message(F.reply_to_message, F.from_user.id == ADMIN_ID)
+async def on_admin_reply(message: types.Message):
+    replied_id = message.reply_to_message.message_id
+    user_chat_id = reply_map.get(replied_id)
+    if not user_chat_id:
+        return
+
+    sent = await bot.send_message(
+        user_chat_id,
+        f"💌 <b>Сообщение от Люта:</b>\n\n{message.text}",
+        parse_mode="HTML",
+    )
+    reply_map[sent.message_id] = user_chat_id
+    await message.reply("✅ Отправлено!")
+
+
+# User free-text messages (write to Lut mode + any message)
+@dp.message(F.text, ~F.text.startswith("/"))
+async def on_user_message(message: types.Message):
+    # Ignore admin's non-reply messages
+    if message.from_user.id == ADMIN_ID:
+        return
+
+    user = message.from_user
+    name = user.full_name or user.username or "Неизвестный"
+
+    if user.id in write_mode:
+        write_mode.discard(user.id)
+
+    # Forward to admin
+    if ADMIN_ID:
+        sent = await bot.send_message(
+            ADMIN_ID,
+            f"💬 <b>{name}:</b>\n\n{message.text}\n\n<i>↩️ Ответь реплаем — она получит</i>",
+            parse_mode="HTML",
+        )
+        reply_map[sent.message_id] = message.from_user.id
+
+    await message.answer("✅ Сообщение отправлено Люту!")
 
 
 async def main():
