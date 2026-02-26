@@ -87,7 +87,7 @@ def build_dates_keyboard() -> InlineKeyboardMarkup:
     dates = [
         ("28 февраля", "2026-02-28"),
         ("7 марта", "2026-03-07"),
-        ("26 марта", "2026-03-26"),
+        ("26 марта (особенно:))", "2026-03-26"),
     ]
     buttons = [
         [InlineKeyboardButton(text=f"📅 {label}", callback_data=f"date:{value}")]
