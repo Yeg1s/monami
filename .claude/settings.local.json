@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add .gitignore bot.py README.md && git commit -m \"$\\(cat <<'EOF'\nremove .env from repo, add .gitignore, date 26 hint\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)"
+    ]
+  }
+}
