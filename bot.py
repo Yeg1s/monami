@@ -53,6 +53,18 @@ async def cmd_start(message: types.Message):
         parse_mode="HTML",
     )
 
+    # Notify admin about /start
+    if ADMIN_ID:
+        user = message.from_user
+        name = user.full_name or user.username or "Неизвестный"
+        username = f" (@{user.username})" if user.username else ""
+        await bot.send_message(
+            ADMIN_ID,
+            f"👀 <b>{name}</b>{username} запустил(а) бота\n"
+            f"ID: <code>{user.id}</code>",
+            parse_mode="HTML",
+        )
+
 
 @dp.message(F.web_app_data)
 async def on_web_app_data(message: types.Message):
