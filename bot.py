@@ -28,7 +28,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 WEBAPP_URL = os.getenv("WEBAPP_URL", "")
 API_BASE_URL = os.getenv("API_BASE_URL", "")
-API_PORT = int(os.getenv("API_PORT", "8080"))
+API_PORT = int(os.getenv("API_PORT", "8069"))
 
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_API_URL = os.getenv("LLM_API_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
