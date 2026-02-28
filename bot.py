@@ -34,7 +34,10 @@ LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-REPLY_MAP_FILE = "reply_map.json"
+DATA_DIR = os.getenv("DATA_DIR", "/data")
+os.makedirs(DATA_DIR, exist_ok=True)
+
+REPLY_MAP_FILE = os.path.join(DATA_DIR, "reply_map.json")
 
 reply_map: dict[int, int] = {}
 write_mode: set[int] = set()
@@ -111,7 +114,7 @@ def save_reply_map():
 
 # ==================== DATABASE ====================
 
-DB_FILE = "wishes.db"
+DB_FILE = os.path.join(DATA_DIR, "wishes.db")
 
 
 def init_db():
