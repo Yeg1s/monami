@@ -258,7 +258,7 @@ def check_oracle_limit(user_id: int | None) -> tuple[bool, str | None]:
         safe_name = html_mod.escape(name)
         return False, (
             f"🔒 Оракул «{safe_name}» достиг лимита ({uses}/{max_uses}) на уровне {level}.\n"
-            f"Шифр отправлен через стандартного Оракула."
+            f"Шифр будет отправлен через стандартного Оракула."
         )
     return True, None
 
@@ -680,7 +680,7 @@ async def cmd_start(message: types.Message):
 
     if ADMIN_ID:
         user = message.from_user
-        name = user.full_name or user.username or "Неизвестный"
+        name = html_mod.escape(user.full_name or user.username or "Неизвестный")
         username = f" (@{user.username})" if user.username else ""
         await bot.send_message(
             ADMIN_ID,
@@ -709,7 +709,7 @@ async def on_web_app_data(message: types.Message):
         )
         if ADMIN_ID:
             user = message.from_user
-            name = user.full_name or user.username or "Неизвестный"
+            name = html_mod.escape(user.full_name or user.username or "Неизвестный")
             await bot.send_message(
                 ADMIN_ID,
                 f"🔔 <b>{name}</b> активировала сертификат на массаж!",
@@ -827,7 +827,7 @@ async def on_date_selected(callback: types.CallbackQuery):
 
     if ADMIN_ID:
         user = callback.from_user
-        name = user.full_name or user.username or "Неизвестный"
+        name = html_mod.escape(user.full_name or user.username or "Неизвестный")
         sent = await bot.send_message(
             ADMIN_ID,
             f"📋 <b>{name}</b> выбрала дату массажа: <b>{pretty}</b>",
@@ -1153,7 +1153,7 @@ async def cmd_oracle(message: types.Message):
         "▫️ Лвл 3 (Великий) → безлимит ∞\n\n"
         "⬆️ <b>Как прокачать:</b>\n"
         "• Лвл 1 → 2: используй любого оракула 3 раза\n"
-        "• Лвл 2 → 3: выполни 2 задания от Люта",
+        "• Лвл 2 → 3: выполни 2 задания от Оракула",
         reply_markup=kb,
         parse_mode="HTML",
     )
@@ -1569,7 +1569,7 @@ async def on_user_message(message: types.Message):
         return
 
     user = message.from_user
-    name = user.full_name or user.username or "Неизвестный"
+    name = html_mod.escape(user.full_name or user.username or "Неизвестный")
 
     if user.id in write_mode:
         write_mode.discard(user.id)
