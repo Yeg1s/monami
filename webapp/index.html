@@ -348,6 +348,97 @@
     animation: shimmer 3s infinite;
   }
 
+  /* ========== ORACLE SELECTOR ========== */
+  .oracle-selector {
+    width: 100%;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .oracle-active {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(17,17,25,0.8);
+    border: 1px solid rgba(212,168,83,0.25);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.3s;
+  }
+  .oracle-active:active {
+    border-color: rgba(212,168,83,0.5);
+  }
+  .oracle-active-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .oracle-active-name {
+    font-weight: 600;
+    color: var(--gold);
+  }
+  .oracle-active-level {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .oracle-chevron {
+    font-size: 10px;
+    color: var(--gold);
+    transition: transform 0.3s;
+  }
+  .oracle-chevron.open {
+    transform: rotate(180deg);
+  }
+  .oracle-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0; right: 0;
+    background: rgba(17,17,25,0.95);
+    border: 1px solid rgba(212,168,83,0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .oracle-dropdown.visible {
+    display: block;
+  }
+  .oracle-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid rgba(212,168,83,0.08);
+  }
+  .oracle-option:last-child { border-bottom: none; }
+  .oracle-option:active { background: rgba(212,168,83,0.1); }
+  .oracle-option.active { background: rgba(212,168,83,0.06); }
+  .oracle-option-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .oracle-option.active .oracle-option-name { color: var(--gold); }
+  .oracle-option-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .oracle-option-check {
+    font-size: 12px;
+    color: var(--gold);
+  }
+
   /* ========== PROCESSING SCREEN ========== */
   #processing-screen {
     justify-content: center;
@@ -689,6 +780,17 @@
     <span class="input-header-title">Твоё желание</span>
   </div>
   <div class="input-body">
+    <div class="oracle-selector" id="oracle-selector" style="display:none;">
+      <div class="oracle-active" id="oracle-active" onclick="toggleOracleDropdown()">
+        <div class="oracle-active-info">
+          <span>🔮</span>
+          <span class="oracle-active-name" id="oracle-active-name">Стандартный Оракул</span>
+          <span class="oracle-active-level" id="oracle-active-level"></span>
+        </div>
+        <span class="oracle-chevron" id="oracle-chevron">▼</span>
+      </div>
+      <div class="oracle-dropdown" id="oracle-dropdown"></div>
+    </div>
     <p class="input-prompt">Поделись с Оракулом сокровенными желаниями,<br>даже шепчущими во тьме.<br><br>Он сплетёт озорную загадку<br>и отправит Люту — на разгадку.</p>
     <div class="textarea-wrapper">
       <textarea id="wish-text" placeholder="Я хочу..." maxlength="500"></textarea>
@@ -822,6 +924,7 @@ function goToWelcome() {
 function goToInput() {
   showScreen('input-screen');
   document.getElementById('wish-text').focus();
+  loadOracles();
 }
 
 function newWish() {
@@ -840,6 +943,127 @@ function openCertificate() {
     window.open(CERT_URL, '_blank');
   }
 }
+
+// ==================== ORACLE SELECTOR ====================
+let oracleList = [];
+let activeOracleId = null;
+let oracleDropdownOpen = false;
+
+function escapeHtml(text) {
+  const d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
+async function loadOracles() {
+  if (!API_URL || !USER_ID) return;
+  try {
+    const resp = await fetch(API_URL + '/api/oracles?uid=' + encodeURIComponent(USER_ID));
+    if (!resp.ok) return;
+    const data = await resp.json();
+    oracleList = data.oracles || [];
+    activeOracleId = data.active_id || null;
+    renderOracleSelector();
+  } catch (e) {
+    console.log('Failed to load oracles:', e);
+  }
+}
+
+function renderOracleSelector() {
+  const container = document.getElementById('oracle-selector');
+  if (oracleList.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'block';
+
+  const nameEl = document.getElementById('oracle-active-name');
+  const levelEl = document.getElementById('oracle-active-level');
+
+  if (activeOracleId) {
+    const active = oracleList.find(o => o.id === activeOracleId);
+    if (active) {
+      nameEl.textContent = active.name;
+      const maxStr = active.max_uses === null ? '∞' : active.max_uses;
+      levelEl.textContent = '(Лвл' + active.level + ' \u2022 ' + active.uses + '/' + maxStr + ')';
+    } else {
+      nameEl.textContent = 'Стандартный Оракул';
+      levelEl.textContent = '';
+    }
+  } else {
+    nameEl.textContent = 'Стандартный Оракул';
+    levelEl.textContent = '';
+  }
+
+  const dropdown = document.getElementById('oracle-dropdown');
+  let html = '';
+  const stdCls = !activeOracleId ? ' active' : '';
+  html += '<div class="oracle-option' + stdCls + '" onclick="selectOracle(null)">'
+    + '<span class="oracle-option-name">🔮 Стандартный Оракул</span>'
+    + (!activeOracleId ? '<span class="oracle-option-check">✓</span>' : '')
+    + '</div>';
+
+  for (const o of oracleList) {
+    const isActive = o.id === activeOracleId;
+    const cls = isActive ? ' active' : '';
+    const maxStr = o.max_uses === null ? '∞' : o.max_uses;
+    html += '<div class="oracle-option' + cls + '" onclick="selectOracle(' + o.id + ')">'
+      + '<div>'
+      + '<span class="oracle-option-name">🔮 ' + escapeHtml(o.name) + '</span> '
+      + '<span class="oracle-option-meta">' + o.level_name + ' ' + o.uses + '/' + maxStr + '</span>'
+      + '</div>'
+      + (isActive ? '<span class="oracle-option-check">✓</span>' : '')
+      + '</div>';
+  }
+  dropdown.innerHTML = html;
+}
+
+function toggleOracleDropdown() {
+  const dropdown = document.getElementById('oracle-dropdown');
+  const chevron = document.getElementById('oracle-chevron');
+  oracleDropdownOpen = !oracleDropdownOpen;
+  if (oracleDropdownOpen) {
+    dropdown.classList.add('visible');
+    chevron.classList.add('open');
+  } else {
+    dropdown.classList.remove('visible');
+    chevron.classList.remove('open');
+  }
+}
+
+async function selectOracle(oracleId) {
+  if (!API_URL || !USER_ID) return;
+  oracleDropdownOpen = false;
+  document.getElementById('oracle-dropdown').classList.remove('visible');
+  document.getElementById('oracle-chevron').classList.remove('open');
+
+  activeOracleId = oracleId;
+  renderOracleSelector();
+
+  if (tg && tg.HapticFeedback) {
+    tg.HapticFeedback.selectionChanged();
+  }
+
+  try {
+    const resp = await fetch(API_URL + '/api/oracle/select', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid: USER_ID, oracle_id: oracleId || 0 }),
+    });
+    if (!resp.ok) await loadOracles();
+  } catch (e) {
+    console.log('Failed to select oracle:', e);
+    await loadOracles();
+  }
+}
+
+document.addEventListener('click', function(e) {
+  if (oracleDropdownOpen && !e.target.closest('.oracle-selector')) {
+    oracleDropdownOpen = false;
+    document.getElementById('oracle-dropdown').classList.remove('visible');
+    document.getElementById('oracle-chevron').classList.remove('open');
+  }
+});
 
 // ==================== TEXTAREA ====================
 const textarea = document.getElementById('wish-text');

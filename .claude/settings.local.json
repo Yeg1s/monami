@@ -4,7 +4,9 @@
       "Bash(git add .gitignore bot.py README.md && git commit -m \"$\\(cat <<'EOF'\nremove .env from repo, add .gitignore, date 26 hint\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push)",
       "Bash(python -c \"import ast; ast.parse\\(open\\('bot.py'\\).read\\(\\)\\); print\\('bot.py: syntax OK'\\)\")",
-      "Bash(python3 -c \"import ast; ast.parse\\(open\\('/mnt/q/_PROJECTS/AI/MONAMI/bot.py'\\).read\\(\\)\\); print\\('bot.py: syntax OK'\\)\")"
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('/mnt/q/_PROJECTS/AI/MONAMI/bot.py'\\).read\\(\\)\\); print\\('bot.py: syntax OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('bot.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('bot.py'\\).read\\(\\)\\); print\\('bot.py: syntax OK'\\)\")"
     ]
   }
 }
