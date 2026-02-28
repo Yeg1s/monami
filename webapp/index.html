@@ -689,7 +689,7 @@
     <span class="input-header-title">Твоё желание</span>
   </div>
   <div class="input-body">
-    <p class="input-prompt">Расскажи Оракулу свои самые сокровенные желания,<br>даже те, что шепчут в темноте.<br><br>Он сплетёт их в изящную загадку с ноткой озорства<br>и отправит Люту — загадку нужно разгадать.</p>
+    <p class="input-prompt">Поделись с Оракулом самыми сокровенными желаниями,<br>даже теми, что шепчут в темноте.<br><br>Он сплетёт их в изящную загадку с ноткой озорства<br>и отправит Люту — на разгадку.</p>
     <div class="textarea-wrapper">
       <textarea id="wish-text" placeholder="Я хочу..." maxlength="500"></textarea>
       <div class="char-count"><span id="char-count">0</span> / 500</div>
@@ -710,7 +710,7 @@
     <div class="orbit-dot dot-3"></div>
   </div>
   <div class="processing-text">
-    Оракул расшифровывает<span class="processing-dots"><span>.</span><span>.</span><span>.</span></span>
+    Оракул зашифровывает<span class="processing-dots"><span>.</span><span>.</span><span>.</span></span>
   </div>
 </div>
 
@@ -874,49 +874,38 @@ async function submitWish() {
 
   showScreen('processing-screen');
 
-  // If we have an API URL, use it for rich UX
-  if (API_URL) {
-    try {
-      const [response] = await Promise.all([
-        fetch(API_URL + '/api/wish', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: text,
-            init_data: tg ? tg.initData : '',
-          }),
+  if (!API_URL) {
+    isSubmitting = false;
+    showScreen('error-screen');
+    return;
+  }
+
+  try {
+    const [response] = await Promise.all([
+      fetch(API_URL + '/api/wish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: text,
+          init_data: tg ? tg.initData : '',
         }),
-        // Minimum processing time for animation
-        new Promise(r => setTimeout(r, 2200)),
-      ]);
+      }),
+      // Minimum processing time for animation
+      new Promise(r => setTimeout(r, 2200)),
+    ]);
 
-      if (!response.ok) throw new Error('API error');
+    if (!response.ok) throw new Error('API error');
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (data.metaphor) {
-        showResult(data.metaphor);
-      } else {
-        throw new Error('No metaphor');
-      }
-    } catch (err) {
-      // Fallback: send raw wish via sendData
-      if (tg) {
-        tg.sendData(JSON.stringify({ action: 'wish', text: text }));
-        // App will close after sendData
-      } else {
-        isSubmitting = false;
-        showScreen('error-screen');
-      }
-    }
-  } else {
-    // No API URL: send via Telegram sendData (fallback)
-    if (tg) {
-      tg.sendData(JSON.stringify({ action: 'wish', text: text }));
+    if (data.metaphor) {
+      showResult(data.metaphor);
     } else {
-      isSubmitting = false;
-      showScreen('error-screen');
+      throw new Error('No metaphor');
     }
+  } catch (err) {
+    isSubmitting = false;
+    showScreen('error-screen');
   }
 }
 

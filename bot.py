@@ -358,7 +358,7 @@ async def on_web_app_data(message: types.Message):
 
         await message.answer(
             "🔮 <b>Оракул получил твоё желание!</b>\n"
-            "Расшифровываю...",
+            "Зашифровываю...",
             parse_mode="HTML",
         )
 
