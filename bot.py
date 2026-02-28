@@ -572,13 +572,19 @@ async def cmd_prompt(message: types.Message):
 
 @dp.message(Command("wish"), F.from_user.id == ADMIN_ID)
 async def cmd_admin_wish(message: types.Message):
-    """Admin sends a wish to the user — Oracle encrypts it."""
-    text = message.text.split(maxsplit=1)
-    if len(text) < 2:
-        await message.reply("Формат: /wish текст желания")
+    """Admin sends a wish to a specific user — Oracle encrypts it."""
+    parts = message.text.split(maxsplit=2)
+    if len(parts) < 3:
+        await message.reply("Формат: /wish &lt;user_id&gt; текст желания")
         return
 
-    wish_text = text[1].strip()
+    try:
+        target_id = int(parts[1])
+    except ValueError:
+        await message.reply("Неверный user_id")
+        return
+
+    wish_text = parts[2].strip()
     await message.reply("🔮 Зашифровываю...")
 
     metaphor = await call_llm(wish_text)
@@ -586,29 +592,21 @@ async def cmd_admin_wish(message: types.Message):
         await message.reply("😔 Оракул сейчас медитирует.")
         return
 
-    # Find the user to send to (first non-admin user)
-    users = [uid for uid in get_all_users() if uid != ADMIN_ID]
-    if not users:
-        await message.reply("Нет зарегистрированных юзеров.")
-        return
-
     safe_metaphor = html_mod.escape(metaphor)
-    for uid in users:
-        try:
-            await bot.send_message(
-                uid,
-                f"🔮 <b>Оракул передаёт от Люта:</b>\n\n"
-                f"<i>{safe_metaphor}</i>",
-                parse_mode="HTML",
-            )
-        except Exception:
-            pass
-
-    await message.reply(
-        f"✅ Отправлено!\n\n"
-        f"<b>Метафора:</b>\n<i>{safe_metaphor}</i>",
-        parse_mode="HTML",
-    )
+    try:
+        await bot.send_message(
+            target_id,
+            f"🔮 <b>Оракул передаёт от Люта:</b>\n\n"
+            f"<i>{safe_metaphor}</i>",
+            parse_mode="HTML",
+        )
+        await message.reply(
+            f"✅ Отправлено!\n\n"
+            f"<b>Метафора:</b>\n<i>{safe_metaphor}</i>",
+            parse_mode="HTML",
+        )
+    except Exception as e:
+        await message.reply(f"Не удалось отправить: {e}")
 
 
 @dp.message(F.text, ~F.text.startswith("/"))
