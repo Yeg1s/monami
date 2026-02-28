@@ -228,9 +228,11 @@ async def handle_wish(request):
     if len(text) > 500:
         return web.json_response({"error": "Too long"}, status=400)
 
-    # Validate Telegram init data if provided
+    # Extract user info
     user_name = "Аноним"
     user_id = None
+
+    # Try validated initData first
     if init_data:
         validated = validate_init_data(init_data, BOT_TOKEN)
         if validated and "user" in validated:
@@ -239,19 +241,15 @@ async def handle_wish(request):
             first = u.get("first_name", "")
             last = u.get("last_name", "")
             user_name = f"{first} {last}".strip() or u.get("username", "Аноним")
-        else:
-            # Fallback: extract user without hash validation
-            try:
-                pairs = dict(chunk.split("=", 1) for chunk in init_data.split("&") if "=" in chunk)
-                if "user" in pairs:
-                    u = json.loads(unquote(pairs["user"]))
-                    user_id = u.get("id")
-                    first = u.get("first_name", "")
-                    last = u.get("last_name", "")
-                    user_name = f"{first} {last}".strip() or u.get("username", "Аноним")
-                    print(f"[WARN] initData hash invalid, but extracted user_id={user_id}")
-            except Exception:
-                pass
+
+    # Fallback: use user object from request body
+    if not user_id:
+        u = data.get("user")
+        if u and isinstance(u, dict):
+            user_id = u.get("id")
+            first = u.get("first_name", "")
+            last = u.get("last_name", "")
+            user_name = f"{first} {last}".strip() or u.get("username", "Аноним")
 
     # Call LLM
     metaphor = await call_llm(text)
@@ -292,7 +290,7 @@ async def handle_wish(request):
         except Exception as e:
             print(f"Failed to notify admin: {e}")
 
-    return web.json_response({"metaphor": metaphor, "_debug_user_id": user_id, "_debug_init_data_len": len(init_data) if init_data else 0})
+    return web.json_response({"metaphor": metaphor})
 
 
 def create_app():

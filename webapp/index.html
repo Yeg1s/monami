@@ -888,6 +888,7 @@ async function submitWish() {
         body: JSON.stringify({
           text: text,
           init_data: tg ? tg.initData : '',
+          user: tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null,
         }),
       }),
       // Minimum processing time for animation
