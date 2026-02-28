@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Сертификат</title>
+<title>Шкатулка Желаний</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@300;400;600;700&family=Great+Vibes&display=swap');
@@ -14,9 +14,12 @@
     --gold: #d4a853;
     --gold-light: #f0d48a;
     --gold-dark: #b8922e;
-    --bg: #0a0a0f;
-    --bg-card: #111118;
+    --purple: #a48ad4;
+    --purple-dark: #7b5fb5;
+    --bg: #0a0a12;
+    --bg-card: #111119;
     --text: #e8e0d0;
+    --text-dim: #7a756e;
   }
 
   body {
@@ -26,26 +29,9 @@
     min-height: 100vh;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
-    user-select: none;
   }
 
-  /* ========== SCREEN 1: SPLASH ========== */
-  .screen {
-    display: none;
-    width: 100%;
-    min-height: 100vh;
-    position: relative;
-  }
-  .screen.active { display: flex; }
-
-  #splash {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 40px 20px;
-  }
-
+  /* ========== PARTICLES ========== */
   #particles-canvas {
     position: fixed;
     top: 0; left: 0;
@@ -54,521 +40,624 @@
     pointer-events: none;
   }
 
-  .splash-content {
+  /* ========== SCREENS ========== */
+  .screen {
+    display: none;
+    width: 100%;
+    min-height: 100vh;
+    flex-direction: column;
+    align-items: center;
     position: relative;
     z-index: 1;
   }
+  .screen.active { display: flex; }
 
-  .club-logo {
-    width: 100px;
-    height: 100px;
-    border: 2px solid var(--gold);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
+  /* ========== WELCOME ========== */
+  #welcome {
     justify-content: center;
-    margin: 0 auto 24px;
+    text-align: center;
+    padding: 40px 24px;
+    gap: 0;
+  }
+
+  .orb-wrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin-bottom: 36px;
+  }
+
+  .orb {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%,
+      rgba(212,168,83,0.35) 0%,
+      rgba(164,138,212,0.2) 35%,
+      rgba(10,10,18,0.9) 70%);
+    box-shadow:
+      0 0 60px rgba(212,168,83,0.25),
+      0 0 120px rgba(164,138,212,0.12),
+      inset 0 0 50px rgba(212,168,83,0.08);
+    animation: orb-breathe 5s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .orb::before {
+    content: '';
+    position: absolute;
+    width: 45%;
+    height: 35%;
+    top: 14%;
+    left: 18%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%);
+    filter: blur(6px);
+  }
+
+  .orb::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0; left: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent, rgba(212,168,83,0.1), transparent, rgba(164,138,212,0.08), transparent);
+    animation: orb-swirl 8s linear infinite;
+  }
+
+  @keyframes orb-breathe {
+    0%, 100% {
+      box-shadow: 0 0 60px rgba(212,168,83,0.25), 0 0 120px rgba(164,138,212,0.12);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 80px rgba(212,168,83,0.4), 0 0 160px rgba(164,138,212,0.2);
+      transform: scale(1.04);
+    }
+  }
+
+  @keyframes orb-swirl {
+    to { transform: rotate(360deg); }
+  }
+
+  .orb-ring {
+    position: absolute;
+    top: -10px; left: -10px;
+    right: -10px; bottom: -10px;
+    border-radius: 50%;
+    border: 1px solid rgba(212,168,83,0.15);
+    animation: ring-rotate 12s linear infinite;
+  }
+
+  .orb-ring::before {
+    content: '';
+    position: absolute;
+    top: -3px; left: 50%;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 12px var(--gold);
+    transform: translateX(-50%);
+  }
+
+  @keyframes ring-rotate {
+    to { transform: rotate(360deg); }
+  }
+
+  .welcome-title {
     font-family: 'Playfair Display', serif;
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 900;
     color: var(--gold);
-    background: radial-gradient(circle, rgba(212,168,83,0.1) 0%, transparent 70%);
-    animation: pulse-glow 3s ease-in-out infinite;
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(212,168,83,0.2); }
-    50% { box-shadow: 0 0 40px rgba(212,168,83,0.4); }
-  }
-
-  .club-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--gold);
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    line-height: 1.4;
-  }
-
-  .club-subtitle {
-    font-size: 11px;
-    color: var(--gold-dark);
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    margin-bottom: 40px;
-  }
-
-  .splash-line {
-    width: 60px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    margin: 0 auto 40px;
-  }
-
-  .splash-message {
-    font-family: 'Great Vibes', cursive;
-    font-size: 28px;
-    color: var(--gold-light);
+    line-height: 1.2;
     margin-bottom: 12px;
   }
 
-  .splash-for {
-    font-size: 14px;
-    color: var(--text);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 50px;
+  .welcome-sub {
+    font-family: 'Great Vibes', cursive;
+    font-size: 22px;
+    color: var(--gold-light);
+    margin-bottom: 48px;
+    opacity: 0.85;
   }
 
-  .btn {
+  .btn-main {
     display: inline-block;
-    padding: 16px 48px;
+    padding: 16px 44px;
     border: 1px solid var(--gold);
     background: transparent;
     color: var(--gold);
     font-family: 'Montserrat', sans-serif;
     font-size: 13px;
     font-weight: 600;
-    letter-spacing: 4px;
+    letter-spacing: 3px;
     text-transform: uppercase;
     cursor: pointer;
     position: relative;
     overflow: hidden;
     transition: all 0.4s ease;
+    border-radius: 2px;
   }
 
-  .btn:active {
+  .btn-main:active {
     background: var(--gold);
     color: var(--bg);
   }
 
-  .btn::before {
+  .btn-main::before {
     content: '';
     position: absolute;
     top: 0; left: -100%;
     width: 100%; height: 100%;
     background: linear-gradient(90deg, transparent, rgba(212,168,83,0.2), transparent);
-    animation: btn-shimmer 3s infinite;
+    animation: shimmer 3s infinite;
   }
 
-  @keyframes btn-shimmer {
+  @keyframes shimmer {
     0% { left: -100%; }
     100% { left: 100%; }
   }
 
-  /* ========== SCREEN 2: ENVELOPE ========== */
-  #envelope-screen {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-  }
-
-  .envelope-wrapper {
-    position: relative;
-    width: 280px;
-    height: 200px;
-    perspective: 800px;
-    cursor: pointer;
-  }
-
-  .envelope {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-
-  .envelope-body {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #1a1520 0%, #12101a 100%);
-    border: 1px solid var(--gold-dark);
-    border-radius: 4px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    z-index: 1;
-  }
-
-  .envelope-flap {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 50%;
-    background: linear-gradient(180deg, #1e1828 0%, #1a1520 100%);
-    border: 1px solid var(--gold-dark);
-    border-bottom: none;
-    clip-path: polygon(0 0, 50% 100%, 100% 0);
-    transform-origin: top center;
-    transition: transform 0.8s ease;
-    z-index: 3;
-  }
-
-  .envelope.opened .envelope-flap {
-    transform: rotateX(180deg);
-    z-index: 0;
-  }
-
-  .seal {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60px;
-    height: 60px;
-    background: radial-gradient(circle, #8b1a1a 0%, #5a0f0f 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Playfair Display', serif;
-    font-size: 16px;
-    font-weight: 900;
-    color: var(--gold-light);
-    z-index: 4;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    transition: all 0.5s ease;
-  }
-
-  .seal.broken {
-    animation: seal-break 0.6s forwards;
-  }
-
-  @keyframes seal-break {
-    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.8; }
-    100% { transform: translate(-50%, -60%) scale(0); opacity: 0; }
-  }
-
-  .envelope-letter {
-    position: absolute;
-    bottom: 10px;
-    left: 10%;
-    width: 80%;
-    height: 70%;
-    background: linear-gradient(135deg, #f5f0e8 0%, #e8ddd0 100%);
-    border-radius: 2px;
-    z-index: 2;
-    transition: transform 1s ease 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-
-  .envelope.opened .envelope-letter {
-    transform: translateY(-180px);
-  }
-
-  .letter-text {
-    text-align: center;
-    color: #2a2020;
-  }
-
-  .letter-text p {
-    font-family: 'Great Vibes', cursive;
-    font-size: 18px;
-    color: #4a3828;
-    line-height: 1.4;
-  }
-
-  .envelope-hint {
-    margin-top: 30px;
+  .cert-link {
+    margin-top: 32px;
     font-size: 12px;
-    color: var(--gold-dark);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    opacity: 0.7;
-    animation: fade-pulse 2s ease-in-out infinite;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: color 0.3s;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(122,117,110,0.3);
+    padding-bottom: 2px;
   }
 
-  @keyframes fade-pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.9; }
-  }
+  .cert-link:active { color: var(--gold-dark); }
 
-  /* ========== SCREEN 3: SCRATCH + CERTIFICATE ========== */
-  #scratch-screen {
-    flex-direction: column;
-    align-items: center;
+  /* ========== INPUT SCREEN ========== */
+  #input-screen {
     justify-content: flex-start;
-    padding: 20px 16px;
-    min-height: 100vh;
+    padding: 0;
   }
 
-  .scratch-hint {
-    font-size: 12px;
-    color: var(--gold-dark);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    text-align: center;
-    z-index: 10;
-    animation: fade-pulse 2s ease-in-out infinite;
-  }
-
-  .scratch-container {
-    position: relative;
+  .input-header {
     width: 100%;
-    max-width: 360px;
-    border-radius: 12px;
-    overflow: hidden;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
 
-  #scratch-canvas {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 5;
-    cursor: pointer;
-    touch-action: none;
-    border-radius: 12px;
-    transition: opacity 0.8s ease;
-  }
-
-  #scratch-canvas.revealed {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .certificate {
-    width: 100%;
-    padding: 32px 24px;
-    background: linear-gradient(135deg, #111118 0%, #0d0d14 50%, #111118 100%);
-    border: 1px solid var(--gold-dark);
-    border-radius: 12px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .certificate::before {
-    content: '';
-    position: absolute;
-    top: 8px; left: 8px; right: 8px; bottom: 8px;
-    border: 1px solid rgba(212,168,83,0.2);
-    border-radius: 8px;
-    pointer-events: none;
-  }
-
-  .cert-corner {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    border-color: var(--gold);
-    border-style: solid;
-  }
-  .cert-corner.tl { top: 16px; left: 16px; border-width: 2px 0 0 2px; }
-  .cert-corner.tr { top: 16px; right: 16px; border-width: 2px 2px 0 0; }
-  .cert-corner.bl { bottom: 16px; left: 16px; border-width: 0 0 2px 2px; }
-  .cert-corner.br { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; }
-
-  .cert-header {
-    font-size: 10px;
-    letter-spacing: 5px;
-    color: var(--gold-dark);
-    text-transform: uppercase;
-    margin-bottom: 20px;
-  }
-
-  .cert-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    font-weight: 900;
+  .back-btn {
+    background: none;
+    border: none;
     color: var(--gold);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 6px;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.3s;
   }
 
-  .cert-subtitle {
-    font-size: 16px;
-    color: var(--gold-light);
-    margin-bottom: 24px;
+  .back-btn:active { opacity: 1; }
+
+  .input-header-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
     letter-spacing: 1px;
   }
 
-  .cert-divider {
-    width: 80px;
+  .input-body {
+    width: 100%;
+    max-width: 440px;
+    padding: 20px 24px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+
+  .input-prompt {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  .textarea-wrapper {
+    width: 100%;
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  #wish-text {
+    width: 100%;
+    min-height: 140px;
+    max-height: 300px;
+    padding: 20px;
+    background: rgba(17,17,25,0.8);
+    border: 1px solid rgba(212,168,83,0.25);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  #wish-text::placeholder {
+    color: rgba(212,168,83,0.3);
+    font-style: italic;
+  }
+
+  #wish-text:focus {
+    border-color: rgba(212,168,83,0.5);
+    box-shadow: 0 0 30px rgba(212,168,83,0.08), inset 0 0 30px rgba(212,168,83,0.03);
+  }
+
+  .char-count {
+    text-align: right;
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 6px 4px;
+    opacity: 0.6;
+  }
+
+  .btn-submit {
+    margin-top: 20px;
+    width: 100%;
+    padding: 16px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.3;
+    cursor: default;
+    border-color: rgba(212,168,83,0.3);
+  }
+
+  .btn-submit:not(:disabled):active {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  .btn-submit:not(:disabled)::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212,168,83,0.15), transparent);
+    animation: shimmer 3s infinite;
+  }
+
+  /* ========== PROCESSING SCREEN ========== */
+  #processing-screen {
+    justify-content: center;
+    padding: 40px 24px;
+    gap: 48px;
+  }
+
+  .oracle {
+    position: relative;
+    width: 140px;
+    height: 140px;
+  }
+
+  .oracle-core {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--gold-light) 0%, var(--gold) 60%, transparent 100%);
+    box-shadow: 0 0 30px var(--gold), 0 0 60px rgba(212,168,83,0.4);
+    animation: core-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes core-pulse {
+    0%, 100% {
+      box-shadow: 0 0 30px var(--gold), 0 0 60px rgba(212,168,83,0.4);
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      box-shadow: 0 0 40px var(--gold-light), 0 0 80px rgba(212,168,83,0.6);
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+  }
+
+  .oracle-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px dashed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .ring-1 {
+    width: 70px; height: 70px;
+    border-color: rgba(212,168,83,0.35);
+    animation: spin 6s linear infinite;
+  }
+
+  .ring-2 {
+    width: 105px; height: 105px;
+    border-color: rgba(164,138,212,0.3);
+    animation: spin 9s linear infinite reverse;
+  }
+
+  .ring-3 {
+    width: 138px; height: 138px;
+    border-color: rgba(212,168,83,0.2);
+    animation: spin 14s linear infinite;
+  }
+
+  @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  .orbit-dot {
+    position: absolute;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+  }
+
+  .dot-1 {
+    width: 7px; height: 7px;
+    background: var(--gold);
+    box-shadow: 0 0 10px var(--gold);
+    animation: orbit-a 3s linear infinite;
+  }
+
+  .dot-2 {
+    width: 5px; height: 5px;
+    background: var(--purple);
+    box-shadow: 0 0 10px var(--purple);
+    animation: orbit-b 4.5s linear infinite;
+  }
+
+  .dot-3 {
+    width: 6px; height: 6px;
+    background: var(--gold-light);
+    box-shadow: 0 0 8px var(--gold-light);
+    animation: orbit-c 6s linear infinite;
+  }
+
+  @keyframes orbit-a {
+    from { transform: rotate(0deg) translateX(35px) translateY(-50%); }
+    to   { transform: rotate(360deg) translateX(35px) translateY(-50%); }
+  }
+  @keyframes orbit-b {
+    from { transform: rotate(120deg) translateX(52px) translateY(-50%); }
+    to   { transform: rotate(480deg) translateX(52px) translateY(-50%); }
+  }
+  @keyframes orbit-c {
+    from { transform: rotate(220deg) translateX(68px) translateY(-50%); }
+    to   { transform: rotate(580deg) translateX(68px) translateY(-50%); }
+  }
+
+  .processing-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  .processing-dots span {
+    animation: blink 1.4s infinite both;
+    font-size: 22px;
+  }
+  .processing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .processing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
+  }
+
+  /* ========== RESULT SCREEN ========== */
+  #result-screen {
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 0;
+  }
+
+  .result-emoji {
+    font-size: 40px;
+    margin-bottom: 24px;
+    animation: float-in 0.6s ease-out;
+  }
+
+  @keyframes float-in {
+    from { opacity: 0; transform: translateY(-20px) scale(0.5); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .result-card {
+    width: 100%;
+    max-width: 380px;
+    padding: 32px 24px;
+    background: linear-gradient(135deg, #13121b 0%, #0e0d16 50%, #13121b 100%);
+    border: 1px solid rgba(212,168,83,0.3);
+    border-radius: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: card-appear 0.7s ease-out 0.2s both;
+  }
+
+  @keyframes card-appear {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: 6px; left: 6px; right: 6px; bottom: 6px;
+    border: 1px solid rgba(212,168,83,0.12);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+
+  .r-corner {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: var(--gold);
+    border-style: solid;
+  }
+  .r-corner.tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+  .r-corner.tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+  .r-corner.bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+  .r-corner.br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
+
+  .result-label {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold-dark);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .result-divider {
+    width: 60px;
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--gold), transparent);
     margin: 0 auto 20px;
   }
 
-  .cert-service {
+  .result-text {
     font-family: 'Great Vibes', cursive;
-    font-size: 32px;
+    font-size: 24px;
     color: var(--gold-light);
-    margin-bottom: 4px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    padding: 0 8px;
   }
 
-  .cert-service-detail {
-    font-size: 12px;
-    color: var(--text);
-    letter-spacing: 2px;
-    margin-bottom: 24px;
-  }
-
-  .cert-recipient-label {
-    font-size: 10px;
-    letter-spacing: 4px;
-    color: var(--gold-dark);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .cert-recipient {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--gold);
-    margin-bottom: 24px;
-  }
-
-  .cert-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(212,168,83,0.15);
-  }
-
-  .cert-footer-col {
-    text-align: center;
-    flex: 1;
-  }
-
-  .cert-sign {
-    font-family: 'Great Vibes', cursive;
-    font-size: 22px;
-    color: var(--gold-light);
-  }
-
-  .cert-sign-label {
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--gold-dark);
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
-
-  .cert-number {
-    font-size: 10px;
-    color: rgba(212,168,83,0.4);
-    margin-top: 16px;
-    letter-spacing: 2px;
-  }
-
-  .cert-stamp {
-    width: 60px;
-    height: 60px;
-    border: 2px solid var(--gold-dark);
-    border-radius: 50%;
+  .result-sent {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto;
-    font-family: 'Playfair Display', serif;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--gold-dark);
-    letter-spacing: 1px;
-    text-align: center;
-    line-height: 1.2;
-  }
-
-  .cert-date {
-    font-size: 10px;
-    color: var(--gold-dark);
-    letter-spacing: 1px;
-  }
-
-  .btn-activate {
+    gap: 8px;
     margin-top: 24px;
-    padding: 18px 56px;
-    border: 2px solid var(--gold);
+    font-size: 13px;
+    color: #5cb87a;
+    letter-spacing: 1px;
+    animation: fade-up 0.5s ease-out 0.8s both;
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .checkmark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(92,184,122,0.15);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .btn-again {
+    margin-top: 28px;
+    padding: 14px 40px;
+    border: 1px solid rgba(212,168,83,0.4);
     background: transparent;
     color: var(--gold);
     font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
     text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.4s ease;
-    opacity: 0;
-    transform: translateY(20px);
-    pointer-events: none;
-    position: relative;
-    overflow: hidden;
+    border-radius: 6px;
+    transition: all 0.3s;
+    animation: fade-up 0.5s ease-out 1s both;
   }
 
-  .btn-activate.visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-    animation: btn-glow 2s ease-in-out infinite;
+  .btn-again:active {
+    background: rgba(212,168,83,0.1);
   }
 
-  @keyframes btn-glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(212,168,83,0.2); }
-    50% { box-shadow: 0 0 40px rgba(212,168,83,0.5), 0 0 80px rgba(212,168,83,0.2); }
+  /* ========== ERROR SCREEN ========== */
+  #error-screen {
+    justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
+    gap: 16px;
   }
 
-  .btn-activate:active {
-    background: var(--gold);
-    color: var(--bg);
-  }
+  .error-emoji { font-size: 48px; margin-bottom: 8px; }
 
-  /* ========== ACTIVATED OVERLAY ========== */
-  .activated-stamp {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0) rotate(-15deg);
+  .error-text {
     font-family: 'Playfair Display', serif;
-    font-size: 42px;
-    font-weight: 900;
-    color: #2ecc71;
-    border: 4px solid #2ecc71;
-    padding: 12px 32px;
-    border-radius: 8px;
-    z-index: 100;
-    opacity: 0;
-    pointer-events: none;
+    font-size: 20px;
+    color: var(--gold);
+  }
+
+  .error-sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .btn-retry {
+    padding: 14px 36px;
+    border: 1px solid var(--gold-dark);
+    background: transparent;
+    color: var(--gold);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
     text-transform: uppercase;
-    letter-spacing: 4px;
-    background: rgba(10,10,15,0.9);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s;
   }
 
-  .activated-stamp.show {
-    animation: stamp-in 0.6s forwards;
-  }
+  .btn-retry:active { background: rgba(212,168,83,0.1); }
 
-  @keyframes stamp-in {
-    0% { transform: translate(-50%, -50%) scale(3) rotate(-15deg); opacity: 0; }
-    60% { transform: translate(-50%, -50%) scale(0.9) rotate(-15deg); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(1) rotate(-15deg); opacity: 1; }
-  }
-
-  /* ========== CONFETTI ========== */
-  #confetti-canvas {
+  /* ========== SPARKLE CANVAS ========== */
+  #sparkle-canvas {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    z-index: 99;
+    z-index: 50;
     pointer-events: none;
   }
 
-  /* ========== TRANSITIONS ========== */
-  .fade-in {
-    animation: fadeIn 0.8s ease forwards;
+  /* ========== UTILITIES ========== */
+  .fade-enter {
+    animation: fadeIn 0.5s ease-out;
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
   }
 </style>
@@ -578,85 +667,80 @@
 <!-- PARTICLES -->
 <canvas id="particles-canvas"></canvas>
 
-<!-- SCREEN 1: SPLASH -->
-<div id="splash" class="screen active">
-  <div class="splash-content">
-    <div class="club-logo">КПА</div>
-    <div class="club-name">Клуб Подпольных<br>Авантюристов</div>
-    <div class="club-subtitle">Секретно</div>
-    <div class="splash-line"></div>
-    <div class="splash-message">Специально для тебя</div>
-    <div class="splash-for">JEVIL AMAZONKA</div>
-    <button class="btn" onclick="goToEnvelope()">Открыть конверт</button>
+<!-- SPARKLE -->
+<canvas id="sparkle-canvas"></canvas>
+
+<!-- SCREEN 1: WELCOME -->
+<div id="welcome" class="screen active">
+  <div class="orb-wrapper">
+    <div class="orb"></div>
+    <div class="orb-ring"></div>
   </div>
+  <div class="welcome-title">Шкатулка<br>Желаний</div>
+  <div class="welcome-sub">Нашепчи — оракул зашифрует</div>
+  <button class="btn-main" onclick="goToInput()">Загадать желание</button>
+  <div class="cert-link" onclick="openCertificate()">Мой сертификат</div>
 </div>
 
-<!-- SCREEN 2: ENVELOPE -->
-<div id="envelope-screen" class="screen">
-  <div class="envelope-wrapper" onclick="openEnvelope()">
-    <div class="envelope" id="envelope">
-      <div class="envelope-body"></div>
-      <div class="envelope-flap"></div>
-      <div class="seal" id="seal">КПА</div>
-      <div class="envelope-letter">
-        <div class="letter-text">
-          <p>Внутри тебя<br>ждёт подарок...</p>
-        </div>
-      </div>
+<!-- SCREEN 2: INPUT -->
+<div id="input-screen" class="screen">
+  <div class="input-header">
+    <button class="back-btn" onclick="goToWelcome()">&#8592;</button>
+    <span class="input-header-title">Твоё желание</span>
+  </div>
+  <div class="input-body">
+    <p class="input-prompt">Расскажи, чего ты хочешь.<br>Оракул превратит это в изящную загадку<br>и отправит твоей половинке.</p>
+    <div class="textarea-wrapper">
+      <textarea id="wish-text" placeholder="Я хочу..." maxlength="500"></textarea>
+      <div class="char-count"><span id="char-count">0</span> / 500</div>
     </div>
+    <button class="btn-submit" id="btn-submit" disabled onclick="submitWish()">Отправить оракулу</button>
   </div>
-  <div class="envelope-hint" id="envelope-hint">Нажми на печать</div>
 </div>
 
-<!-- SCREEN 3: SCRATCH + CERTIFICATE -->
-<div id="scratch-screen" class="screen">
-  <div class="scratch-hint" id="scratch-hint">Сотри защитный слой</div>
-  <div class="scratch-container" id="scratch-container">
-    <canvas id="scratch-canvas"></canvas>
-    <div class="certificate" id="certificate">
-      <div class="cert-corner tl"></div>
-      <div class="cert-corner tr"></div>
-      <div class="cert-corner bl"></div>
-      <div class="cert-corner br"></div>
-
-      <div class="cert-header">Клуб Подпольных Авантюристов</div>
-      <div class="cert-title">Сертификат</div>
-      <div class="cert-subtitle">на бесплатный массаж</div>
-      <div class="cert-divider"></div>
-      <div class="cert-service">Расслабляющий массаж</div>
-      <div class="cert-service-detail">60 МИНУТ УДОВОЛЬСТВИЯ</div>
-
-      <div class="cert-divider"></div>
-
-      <div class="cert-recipient-label">Получатель</div>
-      <div class="cert-recipient">JEVIL AMAZONKA</div>
-
-      <div class="cert-footer">
-        <div class="cert-footer-col">
-          <div class="cert-sign">Лют</div>
-          <div class="cert-sign-label">Подпись</div>
-        </div>
-        <div class="cert-footer-col">
-          <div class="cert-stamp">КПА</div>
-        </div>
-        <div class="cert-footer-col">
-          <div class="cert-date" id="cert-date"></div>
-          <div class="cert-sign-label">Дата</div>
-        </div>
-      </div>
-
-      <div class="cert-number" id="cert-number"></div>
-    </div>
+<!-- SCREEN 3: PROCESSING -->
+<div id="processing-screen" class="screen">
+  <div class="oracle">
+    <div class="oracle-core"></div>
+    <div class="oracle-ring ring-1"></div>
+    <div class="oracle-ring ring-2"></div>
+    <div class="oracle-ring ring-3"></div>
+    <div class="orbit-dot dot-1"></div>
+    <div class="orbit-dot dot-2"></div>
+    <div class="orbit-dot dot-3"></div>
   </div>
-
-  <button class="btn-activate" id="btn-activate" onclick="activateCertificate()">Активировать</button>
+  <div class="processing-text">
+    Оракул расшифровывает<span class="processing-dots"><span>.</span><span>.</span><span>.</span></span>
+  </div>
 </div>
 
-<!-- ACTIVATED STAMP -->
-<div class="activated-stamp" id="activated-stamp">Активирован</div>
+<!-- SCREEN 4: RESULT -->
+<div id="result-screen" class="screen">
+  <div class="result-emoji">&#10024;</div>
+  <div class="result-card">
+    <div class="r-corner tl"></div>
+    <div class="r-corner tr"></div>
+    <div class="r-corner bl"></div>
+    <div class="r-corner br"></div>
+    <div class="result-label">Оракул говорит</div>
+    <div class="result-divider"></div>
+    <p class="result-text" id="result-text"></p>
+    <div class="result-divider"></div>
+  </div>
+  <div class="result-sent">
+    <span class="checkmark">&#10003;</span>
+    Отправлено твоей половинке
+  </div>
+  <button class="btn-again" onclick="newWish()">Загадать ещё</button>
+</div>
 
-<!-- CONFETTI -->
-<canvas id="confetti-canvas"></canvas>
+<!-- SCREEN 5: ERROR -->
+<div id="error-screen" class="screen">
+  <div class="error-emoji">&#128308;</div>
+  <div class="error-text">Оракул сейчас медитирует...</div>
+  <div class="error-sub">Попробуй ещё разок</div>
+  <button class="btn-retry" onclick="goToInput()">Попробовать снова</button>
+</div>
 
 <script>
 // ==================== INIT ====================
@@ -664,20 +748,27 @@ const tg = window.Telegram && window.Telegram.WebApp;
 if (tg) {
   tg.ready();
   tg.expand();
-  tg.setHeaderColor('#0a0a0f');
-  tg.setBackgroundColor('#0a0a0f');
+  tg.setHeaderColor('#0a0a12');
+  tg.setBackgroundColor('#0a0a12');
 }
 
-// Set certificate date and number
-document.getElementById('cert-date').textContent = new Date().toLocaleDateString('ru-RU');
-document.getElementById('cert-number').textContent = '№ КПА-' + String(Math.floor(Math.random() * 9000) + 1000);
+// Read API URL from query params (bot appends ?api=...)
+const urlParams = new URLSearchParams(window.location.search);
+const API_URL = urlParams.get('api') || '';
+
+// Certificate URL (same dir, robust)
+const CERT_URL = (function() {
+  const base = window.location.href.split('?')[0].split('#')[0];
+  if (base.includes('index.html')) return base.replace('index.html', 'certificate.html');
+  return base.replace(/\/?$/, '/') + 'certificate.html';
+})();
 
 // ==================== PARTICLES ====================
 (function initParticles() {
   const canvas = document.getElementById('particles-canvas');
   const ctx = canvas.getContext('2d');
   let particles = [];
-  const COUNT = 50;
+  const COUNT = 45;
 
   function resize() {
     canvas.width = window.innerWidth;
@@ -690,10 +781,11 @@ document.getElementById('cert-number').textContent = '№ КПА-' + String(Math
     particles.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      r: Math.random() * 2 + 0.5,
-      a: Math.random() * 0.5 + 0.1,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25,
+      r: Math.random() * 1.8 + 0.5,
+      a: Math.random() * 0.4 + 0.08,
+      color: Math.random() > 0.7 ? '164,138,212' : '212,168,83',
     });
   }
 
@@ -702,7 +794,7 @@ document.getElementById('cert-number').textContent = '№ КПА-' + String(Math
     particles.forEach(p => {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(212, 168, 83, ${p.a})`;
+      ctx.fillStyle = `rgba(${p.color}, ${p.a})`;
       ctx.fill();
       p.x += p.vx;
       p.y += p.vy;
@@ -722,233 +814,218 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
 }
 
-function goToEnvelope() {
-  showScreen('envelope-screen');
+function goToWelcome() {
+  showScreen('welcome');
 }
 
-// ==================== ENVELOPE ====================
-let envelopeOpened = false;
-
-function openEnvelope() {
-  if (envelopeOpened) return;
-  envelopeOpened = true;
-
-  const seal = document.getElementById('seal');
-  const envelope = document.getElementById('envelope');
-  const hint = document.getElementById('envelope-hint');
-
-  // Break seal
-  seal.classList.add('broken');
-  hint.style.opacity = '0';
-
-  // Open flap after seal breaks
-  setTimeout(() => {
-    envelope.classList.add('opened');
-  }, 400);
-
-  // Transition to scratch screen
-  setTimeout(() => {
-    showScreen('scratch-screen');
-    initScratchCard();
-  }, 2000);
+function goToInput() {
+  showScreen('input-screen');
+  document.getElementById('wish-text').focus();
 }
 
-// ==================== SCRATCH CARD ====================
-function initScratchCard() {
-  const canvas = document.getElementById('scratch-canvas');
-  const container = document.getElementById('scratch-container');
-  const ctx = canvas.getContext('2d');
+function newWish() {
+  document.getElementById('wish-text').value = '';
+  document.getElementById('wish-text').style.height = '';
+  document.getElementById('char-count').textContent = '0';
+  document.getElementById('btn-submit').disabled = true;
+  isSubmitting = false;
+  goToInput();
+}
 
-  // Match canvas size to certificate
-  const rect = container.getBoundingClientRect();
-  canvas.width = rect.width;
-  canvas.height = rect.height;
+function openCertificate() {
+  if (tg) {
+    tg.openLink(CERT_URL);
+  } else {
+    window.open(CERT_URL, '_blank');
+  }
+}
 
-  // Draw scratch surface
-  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, '#2a2535');
-  gradient.addColorStop(0.5, '#1e1a28');
-  gradient.addColorStop(1, '#2a2535');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+// ==================== TEXTAREA ====================
+const textarea = document.getElementById('wish-text');
+const charCount = document.getElementById('char-count');
+const submitBtn = document.getElementById('btn-submit');
 
-  // Add texture pattern
-  ctx.fillStyle = 'rgba(212, 168, 83, 0.08)';
-  for (let i = 0; i < 200; i++) {
-    const x = Math.random() * canvas.width;
-    const y = Math.random() * canvas.height;
-    ctx.beginPath();
-    ctx.arc(x, y, Math.random() * 2, 0, Math.PI * 2);
-    ctx.fill();
+textarea.addEventListener('input', function() {
+  // Auto resize
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 300) + 'px';
+
+  // Char count
+  charCount.textContent = this.value.length;
+
+  // Toggle button
+  submitBtn.disabled = this.value.trim().length === 0;
+});
+
+// ==================== SUBMIT WISH ====================
+let isSubmitting = false;
+
+async function submitWish() {
+  const text = textarea.value.trim();
+  if (!text || isSubmitting) return;
+
+  isSubmitting = true;
+  submitBtn.disabled = true;
+
+  // Haptic feedback
+  if (tg && tg.HapticFeedback) {
+    tg.HapticFeedback.impactOccurred('medium');
   }
 
-  // "Scratch here" text
-  ctx.fillStyle = 'rgba(212, 168, 83, 0.4)';
-  ctx.font = '600 14px Montserrat, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('✦  СОТРИ ЗДЕСЬ  ✦', canvas.width / 2, canvas.height / 2 - 10);
-  ctx.font = '400 11px Montserrat, sans-serif';
-  ctx.fillText('Проведи пальцем', canvas.width / 2, canvas.height / 2 + 15);
+  showScreen('processing-screen');
 
-  // Scratch logic
-  ctx.globalCompositeOperation = 'destination-out';
-  let isScratching = false;
-  let revealed = false;
-  let lastX, lastY;
+  // If we have an API URL, use it for rich UX
+  if (API_URL) {
+    try {
+      const [response] = await Promise.all([
+        fetch(API_URL + '/api/wish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            init_data: tg ? tg.initData : '',
+          }),
+        }),
+        // Minimum processing time for animation
+        new Promise(r => setTimeout(r, 2200)),
+      ]);
 
-  function getPos(e) {
-    const r = canvas.getBoundingClientRect();
-    const touch = e.touches ? e.touches[0] : e;
-    return { x: touch.clientX - r.left, y: touch.clientY - r.top };
-  }
+      if (!response.ok) throw new Error('API error');
 
-  function scratch(e) {
-    if (!isScratching || revealed) return;
-    e.preventDefault();
-    const pos = getPos(e);
-    ctx.lineWidth = 40;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-    lastX = pos.x;
-    lastY = pos.y;
-    checkReveal();
-  }
+      const data = await response.json();
 
-  function startScratch(e) {
-    isScratching = true;
-    const pos = getPos(e);
-    lastX = pos.x;
-    lastY = pos.y;
-  }
-
-  function stopScratch() {
-    isScratching = false;
-  }
-
-  function checkReveal() {
-    if (revealed) return;
-    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    let transparent = 0;
-    const total = data.length / 4;
-    // Sample every 4th pixel for performance
-    for (let i = 3; i < data.length; i += 16) {
-      if (data[i] === 0) transparent++;
+      if (data.metaphor) {
+        showResult(data.metaphor);
+      } else {
+        throw new Error('No metaphor');
+      }
+    } catch (err) {
+      // Fallback: send raw wish via sendData
+      if (tg) {
+        tg.sendData(JSON.stringify({ action: 'wish', text: text }));
+        // App will close after sendData
+      } else {
+        isSubmitting = false;
+        showScreen('error-screen');
+      }
     }
-    const ratio = transparent / (total / 4);
-    if (ratio > 0.4) {
-      revealed = true;
-      canvas.classList.add('revealed');
-      document.getElementById('scratch-hint').style.opacity = '0';
-      setTimeout(() => {
-        const btn = document.getElementById('btn-activate');
-        btn.classList.add('visible');
-      }, 600);
-    }
-  }
-
-  canvas.addEventListener('mousedown', startScratch);
-  canvas.addEventListener('mousemove', scratch);
-  canvas.addEventListener('mouseup', stopScratch);
-  canvas.addEventListener('mouseleave', stopScratch);
-  canvas.addEventListener('touchstart', startScratch, { passive: false });
-  canvas.addEventListener('touchmove', scratch, { passive: false });
-  canvas.addEventListener('touchend', stopScratch);
-}
-
-// ==================== ACTIVATION ====================
-function activateCertificate() {
-  const btn = document.getElementById('btn-activate');
-  btn.style.pointerEvents = 'none';
-  btn.style.opacity = '0.5';
-
-  // Show confetti
-  launchConfetti();
-
-  // Show stamp
-  setTimeout(() => {
-    document.getElementById('activated-stamp').classList.add('show');
-  }, 300);
-
-  // Send data to bot
-  setTimeout(() => {
+  } else {
+    // No API URL: send via Telegram sendData (fallback)
     if (tg) {
-      tg.sendData(JSON.stringify({ action: 'activate' }));
+      tg.sendData(JSON.stringify({ action: 'wish', text: text }));
+    } else {
+      isSubmitting = false;
+      showScreen('error-screen');
     }
-  }, 2500);
-
-  // Close after delay
-  setTimeout(() => {
-    if (tg) {
-      tg.close();
-    }
-  }, 3500);
+  }
 }
 
-// ==================== CONFETTI ====================
-function launchConfetti() {
-  const canvas = document.getElementById('confetti-canvas');
+// ==================== SHOW RESULT ====================
+function showResult(metaphor) {
+  isSubmitting = false;
+  document.getElementById('result-text').textContent = metaphor;
+
+  // Force re-trigger CSS animations by cloning animated elements
+  const card = document.querySelector('.result-card');
+  const sent = document.querySelector('.result-sent');
+  const again = document.querySelector('.btn-again');
+  [card, sent, again].forEach(el => {
+    el.style.animation = 'none';
+    el.offsetHeight; // trigger reflow
+    el.style.animation = '';
+  });
+
+  showScreen('result-screen');
+
+  // Haptic success
+  if (tg && tg.HapticFeedback) {
+    tg.HapticFeedback.notificationOccurred('success');
+  }
+
+  // Sparkle effect
+  launchSparkles();
+}
+
+// ==================== SPARKLE EFFECT ====================
+function launchSparkles() {
+  const canvas = document.getElementById('sparkle-canvas');
   const ctx = canvas.getContext('2d');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  const confetti = [];
-  const colors = ['#d4a853', '#f0d48a', '#b8922e', '#2ecc71', '#e74c3c', '#fff'];
-  const TOTAL = 150;
+  const sparks = [];
+  const colors = ['#d4a853', '#f0d48a', '#a48ad4', '#e8e0d0'];
+  const TOTAL = 60;
 
   for (let i = 0; i < TOTAL; i++) {
-    confetti.push({
-      x: canvas.width / 2 + (Math.random() - 0.5) * 100,
-      y: canvas.height / 2,
-      vx: (Math.random() - 0.5) * 16,
-      vy: Math.random() * -18 - 4,
-      w: Math.random() * 10 + 4,
-      h: Math.random() * 6 + 2,
+    sparks.push({
+      x: canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.6,
+      y: canvas.height * 0.4 + (Math.random() - 0.5) * 100,
+      vx: (Math.random() - 0.5) * 3,
+      vy: (Math.random() - 0.5) * 3 - 1,
+      r: Math.random() * 2.5 + 0.5,
       color: colors[Math.floor(Math.random() * colors.length)],
-      rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 12,
-      gravity: 0.25,
-      opacity: 1,
+      life: 1,
+      decay: 0.008 + Math.random() * 0.015,
     });
   }
 
-  let frame = 0;
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     let alive = false;
 
-    confetti.forEach(c => {
-      if (c.opacity <= 0) return;
+    sparks.forEach(s => {
+      if (s.life <= 0) return;
       alive = true;
-      c.vy += c.gravity;
-      c.x += c.vx;
-      c.y += c.vy;
-      c.vx *= 0.98;
-      c.rotation += c.rotationSpeed;
+      s.x += s.vx;
+      s.y += s.vy;
+      s.vy += 0.02;
+      s.life -= s.decay;
 
-      if (c.y > canvas.height + 20) {
-        c.opacity = 0;
-        return;
-      }
-      if (frame > 60) c.opacity -= 0.008;
-
-      ctx.save();
-      ctx.translate(c.x, c.y);
-      ctx.rotate((c.rotation * Math.PI) / 180);
-      ctx.globalAlpha = Math.max(0, c.opacity);
-      ctx.fillStyle = c.color;
-      ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
-      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.color;
+      ctx.globalAlpha = Math.max(0, s.life);
+      ctx.fill();
+      ctx.globalAlpha = 1;
     });
 
-    frame++;
     if (alive) requestAnimationFrame(animate);
   }
   animate();
 }
+
+// ==================== BACK BUTTON (Telegram) ====================
+if (tg && tg.BackButton) {
+  tg.BackButton.onClick(function() {
+    const active = document.querySelector('.screen.active');
+    if (!active) return;
+    switch (active.id) {
+      case 'input-screen':
+        goToWelcome();
+        break;
+      case 'result-screen':
+      case 'error-screen':
+        newWish();
+        break;
+    }
+  });
+}
+
+// Show/hide Telegram back button based on screen
+const observer = new MutationObserver(() => {
+  if (!tg || !tg.BackButton) return;
+  const active = document.querySelector('.screen.active');
+  if (active && active.id !== 'welcome') {
+    tg.BackButton.show();
+  } else {
+    tg.BackButton.hide();
+  }
+});
+
+document.querySelectorAll('.screen').forEach(s => {
+  observer.observe(s, { attributes: true, attributeFilter: ['class'] });
+});
 </script>
 </body>
 </html>

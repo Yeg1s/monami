@@ -2,3 +2,4 @@
 __pycache__/
 *.pyc
 reply_map.json
+wishes.db
