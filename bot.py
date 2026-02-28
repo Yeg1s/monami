@@ -30,7 +30,7 @@ WEBAPP_URL = os.getenv("WEBAPP_URL", "")
 API_BASE_URL = os.getenv("API_BASE_URL", "")
 API_PORT = int(os.getenv("API_PORT", "8069"))
 
-LLM_API_KEY = os.getenv("LLM_API_KEY", "")
+LLM_API_KEY = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY", "")
 LLM_API_URL = os.getenv("LLM_API_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
 LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.0-flash")
 
