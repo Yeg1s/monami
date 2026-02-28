@@ -438,6 +438,11 @@
     font-size: 12px;
     color: var(--gold);
   }
+  .oracle-hint .oracle-option-name {
+    color: var(--text-dim);
+    font-weight: 400;
+    font-size: 12px;
+  }
 
   /* ========== PROCESSING SCREEN ========== */
   #processing-screen {
@@ -948,6 +953,8 @@ function openCertificate() {
 let oracleList = [];
 let activeOracleId = null;
 let oracleDropdownOpen = false;
+let canCreateOracle = false;
+let wishesCount = 0;
 
 function escapeHtml(text) {
   const d = document.createElement('div');
@@ -963,6 +970,8 @@ async function loadOracles() {
     const data = await resp.json();
     oracleList = data.oracles || [];
     activeOracleId = data.active_id || null;
+    canCreateOracle = data.can_create || false;
+    wishesCount = data.wishes_count || 0;
     renderOracleSelector();
   } catch (e) {
     console.log('Failed to load oracles:', e);
@@ -971,10 +980,6 @@ async function loadOracles() {
 
 function renderOracleSelector() {
   const container = document.getElementById('oracle-selector');
-  if (oracleList.length === 0) {
-    container.style.display = 'none';
-    return;
-  }
   container.style.display = 'block';
 
   const nameEl = document.getElementById('oracle-active-name');
@@ -997,6 +1002,29 @@ function renderOracleSelector() {
 
   const dropdown = document.getElementById('oracle-dropdown');
   let html = '';
+
+  // If no custom oracles — show hint
+  if (oracleList.length === 0) {
+    if (canCreateOracle) {
+      html += '<div class="oracle-option oracle-hint">'
+        + '<span class="oracle-option-name">✨ Создай своего Оракула через /oracle в боте!</span>'
+        + '</div>';
+    } else {
+      const remaining = Math.max(0, 3 - wishesCount);
+      if (remaining > 0) {
+        html += '<div class="oracle-option oracle-hint">'
+          + '<span class="oracle-option-name">🔒 Отправь ещё ' + remaining + ' шифр' + pluralRu(remaining) + ' чтобы создать своего Оракула</span>'
+          + '</div>';
+      } else {
+        html += '<div class="oracle-option oracle-hint">'
+          + '<span class="oracle-option-name">✨ Создай своего Оракула через /oracle в боте!</span>'
+          + '</div>';
+      }
+    }
+    dropdown.innerHTML = html;
+    return;
+  }
+
   const stdCls = !activeOracleId ? ' active' : '';
   html += '<div class="oracle-option' + stdCls + '" onclick="selectOracle(null)">'
     + '<span class="oracle-option-name">🔮 Стандартный Оракул</span>'
@@ -1016,6 +1044,12 @@ function renderOracleSelector() {
       + '</div>';
   }
   dropdown.innerHTML = html;
+}
+
+function pluralRu(n) {
+  if (n === 1) return '';
+  if (n >= 2 && n <= 4) return 'а';
+  return 'ов';
 }
 
 function toggleOracleDropdown() {

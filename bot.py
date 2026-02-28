@@ -300,7 +300,6 @@ async def increment_oracle_use(user_id: int | None):
         )
         conn.commit()
         conn.close()
-        lvl_info = ORACLE_LEVELS[new_level]
         try:
             if new_level == 3:
                 await bot.send_message(
@@ -534,12 +533,16 @@ async def handle_oracles(request):
         "SELECT id, name, level, uses FROM custom_oracles WHERE user_id = ? ORDER BY id",
         (user_id,),
     ).fetchall()
-    active_row = conn.execute(
-        "SELECT active_oracle_id FROM users WHERE user_id = ?", (user_id,)
+    user_row = conn.execute(
+        "SELECT active_oracle_id, can_create_oracle FROM users WHERE user_id = ?", (user_id,)
     ).fetchone()
+    wishes_count = conn.execute(
+        "SELECT COUNT(*) FROM wishes WHERE user_id = ?", (user_id,)
+    ).fetchone()[0]
     conn.close()
 
-    active_id = active_row[0] if active_row and active_row[0] else None
+    active_id = user_row[0] if user_row and user_row[0] else None
+    can_create = bool(user_row[1]) if user_row else False
     oracle_list = []
     for oid, name, level, uses in oracles:
         lvl_info = ORACLE_LEVELS.get(level, ORACLE_LEVELS[1])
@@ -552,7 +555,12 @@ async def handle_oracles(request):
             "level_name": lvl_info["name"],
         })
 
-    return web.json_response({"oracles": oracle_list, "active_id": active_id})
+    return web.json_response({
+        "oracles": oracle_list,
+        "active_id": active_id,
+        "can_create": can_create,
+        "wishes_count": wishes_count,
+    })
 
 
 async def handle_oracle_select(request):
@@ -662,6 +670,9 @@ async def cmd_start(message: types.Message):
         "🔮 <b>Шкатулка Желаний</b> — нашепчи своё желание,\n"
         "оракул превратит его в загадку и отправит Люту.\n\n"
         "🎁 <b>Сертификат</b> — твой подарок на массаж.\n\n"
+        "📋 <b>Команды:</b>\n"
+        "/help — справка\n"
+        "/oracle — управление Оракулами\n\n"
         "Выбирай 👇",
         reply_markup=kb,
         parse_mode="HTML",
@@ -907,12 +918,23 @@ async def cmd_admin_wish(message: types.Message):
         return
 
     wish_text = parts[2].strip()
+    admin_id = message.from_user.id
+
+    # Check admin's oracle limit
+    allowed, limit_msg = check_oracle_limit(admin_id)
+    if not allowed:
+        await message.reply(f"{limit_msg}\nИспользую стандартного.", parse_mode="HTML")
+
     await message.reply("🔮 Зашифровываю...")
 
-    metaphor = await call_llm(wish_text)
+    metaphor = await call_llm(wish_text, user_id=admin_id if allowed else None)
     if not metaphor:
         await message.reply("😔 Оракул сейчас медитирует.")
         return
+
+    # Increment admin's oracle use
+    if allowed:
+        await increment_oracle_use(admin_id)
 
     safe_metaphor = html_mod.escape(metaphor)
     try:
