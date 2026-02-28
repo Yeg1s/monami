@@ -1,13 +1,10 @@
 import asyncio
-import hashlib
-import hmac
 import html as html_mod
 import json
 import os
 import random
 import sqlite3
 from datetime import datetime
-from urllib.parse import unquote
 
 import aiohttp
 from aiohttp import web
@@ -77,7 +74,7 @@ LLM_STYLE_PROMPTS = [
 ]
 
 def get_llm_prompt() -> str:
-    """Pick a prompt: base (85%) or random rare style."""
+    """Pick a prompt: base (80%) or random rare style (20%)."""
     roll = random.randint(1, 100)
     threshold = 0
     for prompt, weight in LLM_STYLE_PROMPTS:
@@ -186,43 +183,6 @@ async def call_llm(text: str) -> str | None:
         print(f"LLM call failed: {e}")
         return None
 
-
-# ==================== TELEGRAM INIT DATA VALIDATION ====================
-
-def validate_init_data(init_data: str, bot_token: str) -> dict | None:
-    """Validate Telegram WebApp initData and return parsed data."""
-    try:
-        pairs = [chunk.split("=", 1) for chunk in init_data.split("&") if "=" in chunk]
-        parsed = {k: v for k, v in pairs}
-
-        received_hash = parsed.pop("hash", "")
-        if not received_hash:
-            return None
-
-        data_check_string = "\n".join(
-            f"{k}={unquote(v)}" for k, v in sorted(parsed.items())
-        )
-
-        secret_key = hmac.new(
-            b"WebAppData", bot_token.encode(), hashlib.sha256
-        ).digest()
-        computed_hash = hmac.new(
-            secret_key, data_check_string.encode(), hashlib.sha256
-        ).hexdigest()
-
-        if computed_hash != received_hash:
-            return None
-
-        result = {}
-        for k, v in parsed.items():
-            decoded = unquote(v)
-            try:
-                result[k] = json.loads(decoded)
-            except (json.JSONDecodeError, ValueError):
-                result[k] = decoded
-        return result
-    except Exception:
-        return None
 
 
 # ==================== AIOHTTP WEB SERVER ====================
@@ -468,7 +428,7 @@ async def on_web_app_data(message: types.Message):
 
 def build_dates_keyboard() -> InlineKeyboardMarkup:
     dates = [
-        ("28 февраля", "2026-02-28"),
+        ("28 марта", "2026-03-28"),
         ("7 марта", "2026-03-07"),
         ("26 марта (особенно:))", "2026-03-26"),
     ]
