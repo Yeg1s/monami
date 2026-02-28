@@ -31,7 +31,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "")
 API_PORT = int(os.getenv("API_PORT", "8069"))
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("LLM_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.0-flash")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
