@@ -57,17 +57,6 @@ LLM_BASE_PROMPT = """Ты — дерзкий Оракул Шкатулки Же�
 - Язык: русский"""
 
 LLM_STYLE_PROMPTS = [
-    ("""Ты — Оракул в стиле Буковски. Грубый, честный, без прикрас.
-
-ЗАДАЧА: Перефразируй желание как Буковски — прямо, грязно, с надрывом и чёрным юмором.
-
-ПРАВИЛА:
-- 1-2 предложения, рубленые и хлёсткие
-- Сохраняй направление желания (для себя / для другого)
-- Без цензуры в стиле, но суть желания должна считываться
-- Пиши как строчку из грязного стихотворения или монолога в баре
-- ТОЛЬКО фраза, без пояснений, кавычек и вступлений
-- Язык: русский""", 15),
 ]
 
 def get_llm_prompt() -> str:
@@ -102,7 +91,7 @@ DB_FILE = "wishes.db"
 
 
 def init_db():
-    """Create wishes table if it doesn't exist."""
+    """Create tables if they don't exist."""
     conn = sqlite3.connect(DB_FILE)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS wishes (
@@ -115,8 +104,34 @@ def init_db():
             created_at TEXT DEFAULT (datetime('now'))
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY,
+            user_name TEXT,
+            first_seen TEXT DEFAULT (datetime('now'))
+        )
+    """)
     conn.commit()
     conn.close()
+
+
+def register_user(user_id: int, user_name: str):
+    """Register user for daily prompts."""
+    conn = sqlite3.connect(DB_FILE)
+    conn.execute(
+        "INSERT OR IGNORE INTO users (user_id, user_name) VALUES (?, ?)",
+        (user_id, user_name),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_all_users() -> list[int]:
+    """Get all registered user IDs."""
+    conn = sqlite3.connect(DB_FILE)
+    rows = conn.execute("SELECT user_id FROM users").fetchall()
+    conn.close()
+    return [r[0] for r in rows]
 
 
 def save_wish(user_id: int | None, user_name: str, original_text: str,
@@ -314,6 +329,9 @@ def get_certificate_url():
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
+    user = message.from_user
+    register_user(user.id, user.full_name or user.username or "Аноним")
+
     kb = ReplyKeyboardMarkup(
         keyboard=[
             [
@@ -529,6 +547,70 @@ async def on_admin_reply(message: types.Message):
     await message.reply("✅ Отправлено!")
 
 
+@dp.message(Command("prompt"), F.from_user.id == ADMIN_ID)
+async def cmd_prompt(message: types.Message):
+    """Admin adds a daily prompt to the queue."""
+    text = message.text.split(maxsplit=1)
+    if len(text) < 2:
+        prompts = load_prompts()
+        if prompts:
+            lines = [f"{i+1}. {p[:60]}..." if len(p) > 60 else f"{i+1}. {p}" for i, p in enumerate(prompts)]
+            await message.reply(
+                f"📋 <b>В очереди ({len(prompts)}):</b>\n" + "\n".join(lines),
+                parse_mode="HTML",
+            )
+        else:
+            await message.reply("Очередь пуста. Добавь: /prompt текст подсказки")
+        return
+
+    prompt_text = text[1].strip()
+    prompts = load_prompts()
+    prompts.append(prompt_text)
+    save_prompts(prompts)
+    await message.reply(f"✅ Добавлено в очередь (всего: {len(prompts)})")
+
+
+@dp.message(Command("wish"), F.from_user.id == ADMIN_ID)
+async def cmd_admin_wish(message: types.Message):
+    """Admin sends a wish to the user — Oracle encrypts it."""
+    text = message.text.split(maxsplit=1)
+    if len(text) < 2:
+        await message.reply("Формат: /wish текст желания")
+        return
+
+    wish_text = text[1].strip()
+    await message.reply("🔮 Зашифровываю...")
+
+    metaphor = await call_llm(wish_text)
+    if not metaphor:
+        await message.reply("😔 Оракул сейчас медитирует.")
+        return
+
+    # Find the user to send to (first non-admin user)
+    users = [uid for uid in get_all_users() if uid != ADMIN_ID]
+    if not users:
+        await message.reply("Нет зарегистрированных юзеров.")
+        return
+
+    safe_metaphor = html_mod.escape(metaphor)
+    for uid in users:
+        try:
+            await bot.send_message(
+                uid,
+                f"🔮 <b>Оракул передаёт от Люта:</b>\n\n"
+                f"<i>{safe_metaphor}</i>",
+                parse_mode="HTML",
+            )
+        except Exception:
+            pass
+
+    await message.reply(
+        f"✅ Отправлено!\n\n"
+        f"<b>Метафора:</b>\n<i>{safe_metaphor}</i>",
+        parse_mode="HTML",
+    )
+
+
 @dp.message(F.text, ~F.text.startswith("/"))
 @dp.message(~F.content_type.in_({"web_app_data"}), ~F.text)
 async def on_user_message(message: types.Message):
@@ -554,6 +636,50 @@ async def on_user_message(message: types.Message):
     await message.answer("✅ Сообщение отправлено Люту!")
 
 
+# ==================== DAILY PROMPTS ====================
+
+PROMPTS_FILE = "daily_prompts.json"
+
+
+def load_prompts() -> list[str]:
+    try:
+        with open(PROMPTS_FILE, "r") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def save_prompts(prompts: list[str]):
+    with open(PROMPTS_FILE, "w") as f:
+        json.dump(prompts, f, ensure_ascii=False, indent=2)
+
+
+async def send_daily_prompt():
+    """Send one prompt from the queue to all users. Skip if empty."""
+    while True:
+        now = datetime.now()
+        target = now.replace(hour=12, minute=0, second=0, microsecond=0)
+        if now >= target:
+            target = target.replace(day=target.day + 1)
+        wait_seconds = (target - now).total_seconds()
+        await asyncio.sleep(wait_seconds)
+
+        prompts = load_prompts()
+        if not prompts:
+            continue
+
+        prompt = prompts.pop(0)
+        save_prompts(prompts)
+
+        users = get_all_users()
+        for uid in users:
+            try:
+                await bot.send_message(uid, prompt, parse_mode="HTML")
+            except Exception:
+                pass
+            await asyncio.sleep(0.5)
+
+
 # ==================== MAIN ====================
 
 async def main():
@@ -567,6 +693,9 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", API_PORT)
     await site.start()
     print(f"API server started on 0.0.0.0:{API_PORT}")
+
+    # Start daily prompts
+    asyncio.create_task(send_daily_prompt())
 
     # Start bot polling
     print("Bot started")
