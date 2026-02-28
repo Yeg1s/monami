@@ -230,7 +230,18 @@ async def handle_wish(request):
 
     # Extract user info
     user_name = "Аноним"
-    user_id = int(uid) if uid else None
+    try:
+        user_id = int(uid) if uid else None
+    except (ValueError, TypeError):
+        user_id = None
+
+    # Get user name via Bot API
+    if user_id:
+        try:
+            chat = await bot.get_chat(user_id)
+            user_name = chat.full_name or chat.username or "Аноним"
+        except Exception:
+            pass
 
     # Call LLM
     metaphor = await call_llm(text)
