@@ -4,6 +4,7 @@ import hmac
 import html as html_mod
 import json
 import os
+import random
 import sqlite3
 from datetime import datetime
 from urllib.parse import unquote
@@ -41,7 +42,7 @@ REPLY_MAP_FILE = "reply_map.json"
 reply_map: dict[int, int] = {}
 write_mode: set[int] = set()
 
-LLM_SYSTEM_PROMPT = """Ты — дерзкий Оракул Шкатулки Желаний.
+LLM_BASE_PROMPT = """Ты — дерзкий Оракул Шкатулки Желаний.
 
 ЗАДАЧА: Перефразируй желание в короткую загадку-иносказание с игривым подтекстом.
 
@@ -54,6 +55,30 @@ LLM_SYSTEM_PROMPT = """Ты — дерзкий Оракул Шкатулки Ж�
 - Двусмысленность — твоё оружие, но суть должна считываться
 - ТОЛЬКО фраза, без пояснений, кавычек и вступлений
 - Язык: русский"""
+
+LLM_STYLE_PROMPTS = [
+    ("""Ты — Оракул в стиле Буковски. Грубый, честный, без прикрас.
+
+ЗАДАЧА: Перефразируй желание как Буковски — прямо, грязно, с надрывом и чёрным юмором.
+
+ПРАВИЛА:
+- 1-2 предложения, рубленые и хлёсткие
+- Сохраняй направление желания (для себя / для другого)
+- Без цензуры в стиле, но суть желания должна считываться
+- Пиши как строчку из грязного стихотворения или монолога в баре
+- ТОЛЬКО фраза, без пояснений, кавычек и вступлений
+- Язык: русский""", 15),
+]
+
+def get_llm_prompt() -> str:
+    """Pick a prompt: base (85%) or random rare style."""
+    roll = random.randint(1, 100)
+    threshold = 0
+    for prompt, weight in LLM_STYLE_PROMPTS:
+        threshold += weight
+        if roll <= threshold:
+            return prompt
+    return LLM_BASE_PROMPT
 
 
 def load_reply_map():
@@ -117,10 +142,11 @@ async def call_llm(text: str) -> str | None:
     try:
         from google import genai
         client = genai.Client(api_key=GEMINI_API_KEY)
+        prompt = get_llm_prompt()
         response = await asyncio.to_thread(
             client.models.generate_content,
             model=LLM_MODEL,
-            contents=f"{LLM_SYSTEM_PROMPT}\n\nЖелание: {text}",
+            contents=f"{prompt}\n\nЖелание: {text}",
         )
         result = response.text
         return result.strip() if result else None
@@ -266,7 +292,7 @@ async def handle_wish(request):
         except Exception as e:
             print(f"Failed to notify admin: {e}")
 
-    return web.json_response({"metaphor": metaphor})
+    return web.json_response({"metaphor": metaphor, "_debug_user_id": user_id, "_debug_init_data_len": len(init_data) if init_data else 0})
 
 
 def create_app():
