@@ -249,7 +249,7 @@ async def handle_wish(request):
             safe_metaphor = html_mod.escape(metaphor)
             await bot.send_message(
                 user_id,
-                f"🔮 <b>Оракул передал Люту:</b>\n\n"
+                f"🔮 <b>Оракул передал шифр Люту:</b>\n\n"
                 f"<i>{safe_metaphor}</i>",
                 parse_mode="HTML",
             )
@@ -574,7 +574,7 @@ async def cmd_admin_wish(message: types.Message):
     try:
         await bot.send_message(
             target_id,
-            f"🔮 <b>Оракул передаёт от Люта:</b>\n\n"
+            f"🔮 <b>Оракул передаёт шифр от Люта:</b>\n\n"
             f"<i>{safe_metaphor}</i>",
             parse_mode="HTML",
         )
