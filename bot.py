@@ -221,6 +221,19 @@ async def handle_wish(request):
     # Save to database
     save_wish(user_id, user_name, text, metaphor, source="api")
 
+    # Send metaphor to user in bot chat
+    if user_id:
+        try:
+            safe_metaphor = html_mod.escape(metaphor)
+            await bot.send_message(
+                user_id,
+                f"🔮 <b>Оракул передал Люту:</b>\n\n"
+                f"<i>{safe_metaphor}</i>",
+                parse_mode="HTML",
+            )
+        except Exception as e:
+            print(f"Failed to notify user: {e}")
+
     # Send to admin
     if ADMIN_ID:
         try:
@@ -361,7 +374,7 @@ async def on_web_app_data(message: types.Message):
             await message.answer(
                 f"✨ <b>Оракул говорит:</b>\n\n"
                 f"<i>{safe_metaphor}</i>\n\n"
-                f"Отправлено твоей половинке!",
+                f"Отправлено Люту!",
                 parse_mode="HTML",
             )
             if ADMIN_ID:
