@@ -566,25 +566,26 @@ async def on_admin_reply(message: types.Message):
 
 @dp.message(Command("prompt"), F.from_user.id == ADMIN_ID)
 async def cmd_prompt(message: types.Message):
-    """Admin adds a daily prompt to the queue."""
+    """Admin sends a prompt to all users right now."""
     text = message.text.split(maxsplit=1)
     if len(text) < 2:
-        prompts = load_prompts()
-        if prompts:
-            lines = [f"{i+1}. {p[:60]}..." if len(p) > 60 else f"{i+1}. {p}" for i, p in enumerate(prompts)]
-            await message.reply(
-                f"📋 <b>В очереди ({len(prompts)}):</b>\n" + "\n".join(lines),
-                parse_mode="HTML",
-            )
-        else:
-            await message.reply("Очередь пуста. Добавь: /prompt текст подсказки")
+        await message.reply("Формат: /prompt текст подсказки")
         return
 
     prompt_text = text[1].strip()
-    prompts = load_prompts()
-    prompts.append(prompt_text)
-    save_prompts(prompts)
-    await message.reply(f"✅ Добавлено в очередь (всего: {len(prompts)})")
+    users = [uid for uid in get_all_users() if uid != ADMIN_ID]
+    if not users:
+        await message.reply("Нет зарегистрированных юзеров.")
+        return
+
+    sent = 0
+    for uid in users:
+        try:
+            await bot.send_message(uid, prompt_text, parse_mode="HTML")
+            sent += 1
+        except Exception:
+            pass
+    await message.reply(f"✅ Отправлено {sent} юзерам")
 
 
 @dp.message(Command("wish"), F.from_user.id == ADMIN_ID)
@@ -651,50 +652,6 @@ async def on_user_message(message: types.Message):
     await message.answer("✅ Сообщение отправлено Люту!")
 
 
-# ==================== DAILY PROMPTS ====================
-
-PROMPTS_FILE = "daily_prompts.json"
-
-
-def load_prompts() -> list[str]:
-    try:
-        with open(PROMPTS_FILE, "r") as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
-
-
-def save_prompts(prompts: list[str]):
-    with open(PROMPTS_FILE, "w") as f:
-        json.dump(prompts, f, ensure_ascii=False, indent=2)
-
-
-async def send_daily_prompt():
-    """Send one prompt from the queue to all users. Skip if empty."""
-    while True:
-        now = datetime.now()
-        target = now.replace(hour=12, minute=0, second=0, microsecond=0)
-        if now >= target:
-            target = target.replace(day=target.day + 1)
-        wait_seconds = (target - now).total_seconds()
-        await asyncio.sleep(wait_seconds)
-
-        prompts = load_prompts()
-        if not prompts:
-            continue
-
-        prompt = prompts.pop(0)
-        save_prompts(prompts)
-
-        users = get_all_users()
-        for uid in users:
-            try:
-                await bot.send_message(uid, prompt, parse_mode="HTML")
-            except Exception:
-                pass
-            await asyncio.sleep(0.5)
-
-
 # ==================== MAIN ====================
 
 async def main():
@@ -708,9 +665,6 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", API_PORT)
     await site.start()
     print(f"API server started on 0.0.0.0:{API_PORT}")
-
-    # Start daily prompts
-    asyncio.create_task(send_daily_prompt())
 
     # Start bot polling
     print("Bot started")
