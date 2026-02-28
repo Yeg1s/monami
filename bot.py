@@ -220,7 +220,7 @@ async def handle_wish(request):
         return web.json_response({"error": "Invalid JSON"}, status=400)
 
     text = data.get("text", "").strip()
-    init_data = data.get("init_data", "")
+    uid = data.get("uid")
 
     if not text:
         return web.json_response({"error": "Empty wish"}, status=400)
@@ -230,26 +230,7 @@ async def handle_wish(request):
 
     # Extract user info
     user_name = "Аноним"
-    user_id = None
-
-    # Try validated initData first
-    if init_data:
-        validated = validate_init_data(init_data, BOT_TOKEN)
-        if validated and "user" in validated:
-            u = validated["user"]
-            user_id = u.get("id")
-            first = u.get("first_name", "")
-            last = u.get("last_name", "")
-            user_name = f"{first} {last}".strip() or u.get("username", "Аноним")
-
-    # Fallback: use user object from request body
-    if not user_id:
-        u = data.get("user")
-        if u and isinstance(u, dict):
-            user_id = u.get("id")
-            first = u.get("first_name", "")
-            last = u.get("last_name", "")
-            user_name = f"{first} {last}".strip() or u.get("username", "Аноним")
+    user_id = int(uid) if uid else None
 
     # Call LLM
     metaphor = await call_llm(text)
@@ -260,7 +241,6 @@ async def handle_wish(request):
     save_wish(user_id, user_name, text, metaphor, source="api")
 
     # Send metaphor to user in bot chat
-    print(f"[DEBUG] user_id={user_id}, user_name={user_name}")
     if user_id:
         try:
             safe_metaphor = html_mod.escape(metaphor)
@@ -301,12 +281,15 @@ def create_app():
 
 # ==================== BOT HANDLERS ====================
 
-def get_webapp_url():
-    """Build webapp URL with API base parameter."""
+def get_webapp_url(user_id: int = None):
+    """Build webapp URL with API base and user_id parameters."""
     url = WEBAPP_URL
     if API_BASE_URL:
         sep = "&" if "?" in url else "?"
         url += f"{sep}api={API_BASE_URL}"
+    if user_id:
+        sep = "&" if "?" in url else "?"
+        url += f"{sep}uid={user_id}"
     return url
 
 
@@ -325,7 +308,7 @@ async def cmd_start(message: types.Message):
             [
                 KeyboardButton(
                     text="🔮 Шкатулка Желаний",
-                    web_app=WebAppInfo(url=get_webapp_url()),
+                    web_app=WebAppInfo(url=get_webapp_url(message.from_user.id)),
                 )
             ],
             [

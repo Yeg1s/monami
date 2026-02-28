@@ -755,6 +755,7 @@ if (tg) {
 // Read API URL from query params (bot appends ?api=...)
 const urlParams = new URLSearchParams(window.location.search);
 const API_URL = urlParams.get('api') || '';
+const USER_ID = urlParams.get('uid') || '';
 
 // Certificate URL (same dir, robust)
 const CERT_URL = (function() {
@@ -887,8 +888,7 @@ async function submitWish() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: text,
-          init_data: tg ? tg.initData : '',
-          user: tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null,
+          uid: USER_ID || null,
         }),
       }),
       // Minimum processing time for animation
