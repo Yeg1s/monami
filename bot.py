@@ -30,8 +30,7 @@ WEBAPP_URL = os.getenv("WEBAPP_URL", "")
 API_BASE_URL = os.getenv("API_BASE_URL", "")
 API_PORT = int(os.getenv("API_PORT", "8069"))
 
-LLM_API_KEY = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY", "")
-LLM_API_URL = os.getenv("LLM_API_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("LLM_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.0-flash")
 
 bot = Bot(token=BOT_TOKEN)
@@ -110,38 +109,23 @@ def save_wish(user_id: int | None, user_name: str, original_text: str,
 # ==================== LLM API ====================
 
 async def call_llm(text: str) -> str | None:
-    """Call LLM API to metaphorically rephrase a wish."""
-    if not LLM_API_KEY:
+    """Call Gemini API to metaphorically rephrase a wish."""
+    if not GEMINI_API_KEY:
         return None
 
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.post(
-                f"{LLM_API_URL}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {LLM_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": LLM_MODEL,
-                    "messages": [
-                        {"role": "system", "content": LLM_SYSTEM_PROMPT},
-                        {"role": "user", "content": text},
-                    ],
-                    "max_tokens": 200,
-                    "temperature": 1.0,
-                },
-                timeout=aiohttp.ClientTimeout(total=30),
-            ) as resp:
-                if resp.status != 200:
-                    body = await resp.text()
-                    print(f"LLM API error {resp.status}: {body}")
-                    return None
-                data = await resp.json()
-                return data["choices"][0]["message"]["content"].strip()
-        except Exception as e:
-            print(f"LLM call failed: {e}")
-            return None
+    try:
+        from google import genai
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        response = await asyncio.to_thread(
+            client.models.generate_content,
+            model=LLM_MODEL,
+            contents=f"{LLM_SYSTEM_PROMPT}\n\nЖелание: {text}",
+        )
+        result = response.text
+        return result.strip() if result else None
+    except Exception as e:
+        print(f"LLM call failed: {e}")
+        return None
 
 
 # ==================== TELEGRAM INIT DATA VALIDATION ====================
