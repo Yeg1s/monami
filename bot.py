@@ -31,8 +31,8 @@ API_BASE_URL = os.getenv("API_BASE_URL", "")
 API_PORT = int(os.getenv("API_PORT", "8080"))
 
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
-LLM_API_URL = os.getenv("LLM_API_URL", "https://api.openai.com/v1")
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
+LLM_API_URL = os.getenv("LLM_API_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.0-flash")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
