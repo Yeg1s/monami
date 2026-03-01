@@ -511,8 +511,7 @@ async def handle_wish(request):
                 ADMIN_ID,
                 f"🔮 <b>Новое желание из Шкатулки!</b>\n\n"
                 f"👤 От: <b>{safe_name}</b>\n\n"
-                f"✨ <b>Метафора:</b>\n<i>{safe_metaphor}</i>\n\n"
-                f"📝 <b>Оригинал:</b>\n<tg-spoiler>{safe_text}</tg-spoiler>",
+                f"✨ <b>Метафора:</b>\n<i>{safe_metaphor}</i>",
                 parse_mode="HTML",
             )
         except Exception as e:
@@ -771,8 +770,7 @@ async def on_web_app_data(message: types.Message):
                     ADMIN_ID,
                     f"🔮 <b>Новое желание из Шкатулки!</b>\n\n"
                     f"👤 От: <b>{name}</b>\n\n"
-                    f"✨ <b>Метафора:</b>\n<i>{safe_metaphor}</i>\n\n"
-                    f"📝 <b>Оригинал:</b>\n<tg-spoiler>{safe_text}</tg-spoiler>",
+                    f"✨ <b>Метафора:</b>\n<i>{safe_metaphor}</i>",
                     parse_mode="HTML",
                 )
                 reply_map[sent.message_id] = message.from_user.id
