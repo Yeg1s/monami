@@ -938,10 +938,26 @@ async def cmd_admin_wish(message: types.Message):
         await increment_oracle_use(admin_id)
 
     safe_metaphor = html_mod.escape(metaphor)
+
+    # Get oracle name if admin uses a custom oracle
+    oracle_label = "Оракул"
+    if allowed:
+        conn = sqlite3.connect(DB_FILE)
+        arow = conn.execute(
+            "SELECT active_oracle_id FROM users WHERE user_id = ?", (admin_id,)
+        ).fetchone()
+        if arow and arow[0]:
+            orow = conn.execute(
+                "SELECT name FROM custom_oracles WHERE id = ?", (arow[0],)
+            ).fetchone()
+            if orow:
+                oracle_label = f"Оракул «{html_mod.escape(orow[0])}»"
+        conn.close()
+
     try:
         await bot.send_message(
             target_id,
-            f"🔮 <b>Оракул передаёт шифр от Люта:</b>\n\n"
+            f"🔮 <b>{oracle_label} передаёт шифр от Люта:</b>\n\n"
             f"<i>{safe_metaphor}</i>",
             parse_mode="HTML",
         )
